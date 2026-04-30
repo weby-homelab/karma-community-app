@@ -68,4 +68,10 @@
 Будь-які Pull Requests (PR) дуже вітаються! Створюйте Issue, якщо знаходите баги або хочете додати новий функціонал. 
 
 ## 📄 Ліцензія
-[MIT License](LICENSE) © 2026 Weby Homelab.
+[MIT License](LICENSE)
+
+<br>
+<p align="center">
+  Built in Ukraine under air raid sirens &amp; blackouts ⚡<br>
+  &copy; 2026 Weby Homelab
+</p>
