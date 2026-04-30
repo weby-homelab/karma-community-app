@@ -1,5 +1,10 @@
 # Karma Community App 🏆
 
+<p align="center">
+  <img src="assets/karma-community-app-1.png" width="400" />
+  <img src="assets/karma-community-app-2.png" width="400" />
+</p>
+
 Сучасний Telegram Mini App для гейміфікації спільноти. Створено з використанням найновіших трендів 2026 року — нарахування "карми" через емодзі-реакції (🔥, ❤️, 👍 та інші) з відображенням таблиці лідерів у стильному інтерфейсі.
 
 ![Karma Community App Banner](https://img.shields.io/badge/Status-Active-success) ![License](https://img.shields.io/badge/License-MIT-blue) ![Stack](https://img.shields.io/badge/Stack-Node.js%20|%20React%20|%20Vite-blueviolet)
