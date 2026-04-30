@@ -21,13 +21,32 @@ app.get('/api/leaderboard', async (req, res) => {
 
 app.get('/api/user/:id', async (req, res) => {
   try {
+    const { id } = req.params;
+    const { username, first_name } = req.query;
     const db = await getDb();
-    const user = await db.get('SELECT id, username, first_name, karma FROM users WHERE id = ?', req.params.id);
+    
+    let user = await db.get('SELECT id, username, first_name, karma FROM users WHERE id = ?', id);
+    
+    // Auto-register if user not found and info is provided
+    if (!user && first_name) {
+      await db.run(
+        'INSERT INTO users (id, username, first_name, karma) VALUES (?, ?, ?, 0)',
+        [id, username || '', first_name]
+      );
+      user = { id: parseInt(id), username: username || '', first_name, karma: 0 };
+    }
+
     if (!user) {
       return res.status(404).json({ error: 'User not found' });
     }
-    const rankData = await db.get('SELECT COUNT(*) as rank FROM users WHERE karma > ?', user.karma);
-    res.json({ ...user, rank: rankData.rank + 1 });
+
+    // Rank logic: count users with more karma OR same karma but older account (smaller ID)
+    const rankData = await db.get(
+      'SELECT COUNT(*) as rank FROM users WHERE karma > ? OR (karma = ? AND id <= ?)',
+      [user.karma, user.karma, user.id]
+    );
+    
+    res.json({ ...user, rank: rankData.rank });
   } catch (error) {
     console.error('User profile error:', error);
     res.status(500).json({ error: 'Internal Server Error' });

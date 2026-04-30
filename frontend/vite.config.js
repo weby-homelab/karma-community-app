@@ -13,4 +13,13 @@ export default defineConfig({
       },
     },
   },
+  preview: {
+    allowedHosts: ['winner.srvrs.top'],
+    proxy: {
+      '/api': {
+        target: 'http://localhost:3015',
+        changeOrigin: true,
+      },
+    },
+  },
 })

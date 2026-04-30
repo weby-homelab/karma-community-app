@@ -9,6 +9,22 @@ if (!process.env.BOT_TOKEN) {
 
 const bot = new Bot(process.env.BOT_TOKEN || 'DUMMY_TOKEN');
 
+const WEB_APP_URL = 'https://winner.srvrs.top/';
+
+// Start command
+bot.command('start', async (ctx) => {
+  const db = await getDb();
+  await registerUser(db, ctx.from);
+  
+  await ctx.reply('Вітаємо у Karma Community! Натисніть кнопку нижче, щоб відкрити додаток.', {
+    reply_markup: {
+      inline_keyboard: [
+        [{ text: 'Відкрити App', web_app: { url: WEB_APP_URL } }]
+      ]
+    }
+  });
+});
+
 // Helper to register user
 async function registerUser(db, user) {
   if (!user || user.is_bot) return;
