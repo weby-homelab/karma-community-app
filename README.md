@@ -9,6 +9,49 @@
 
 ![Karma Community App Banner](https://img.shields.io/badge/Status-Active-success) ![License](https://img.shields.io/badge/License-MIT-blue) ![Stack](https://img.shields.io/badge/Stack-Node.js%20|%20React%20|%20Vite-blueviolet)
 
+## 🏗️ Архітектура Системи
+
+```mermaid
+graph TD
+    %% Nodes definition
+    User((👤 Користувач))
+    TG[Telegram App]
+    Bot[🤖 Telegram Bot<br/><i>grammY / Node.js</i>]
+    API[⚙️ REST API<br/><i>Express / Node.js</i>]
+    DB[(🗄️ SQLite Database<br/><i>Karma & Messages</i>)]
+    WebApp[🎨 Mini App UI<br/><i>React 19 / Vite 8</i>]
+
+    %% Styles
+    classDef primary fill:#646cff,stroke:#fff,stroke-width:2px,color:#fff
+    classDef secondary fill:#2c2c2c,stroke:#646cff,stroke-width:1px,color:#fff
+    classDef highlight fill:#ff9a9e,stroke:#fff,stroke-width:2px,color:#000
+    classDef storage fill:#a18cd1,stroke:#fff,stroke-width:1px,color:#fff
+
+    class Bot,API primary
+    class WebApp highlight
+    class DB storage
+    class TG secondary
+
+    %% Connections
+    User -->|Взаємодія / Реакції| TG
+    TG <-->|Events / Commands| Bot
+    TG <-->|Launch / WebApp API| WebApp
+    Bot -->|Запис карми| DB
+    WebApp <-->|JSON Data| API
+    API <-->|SQL Queries| DB
+
+    %% Annotations
+    subgraph "Backend (Cloudflare Tunnel)"
+    Bot
+    API
+    DB
+    end
+
+    subgraph "Client Side"
+    WebApp
+    end
+```
+
 ---
 
 ## 🌟 Можливості (Features)
