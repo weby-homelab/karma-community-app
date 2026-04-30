@@ -19,17 +19,23 @@
 *   **Real-time оновлення бази:** SQLite база миттєво фіксує всі змінені та видалені реакції. Бот рахує дельту та забезпечує справедливу карму.
 *   **Безпека та CORS:** Бекенд приховано за проксі від Vite (Node.js/Express) для безперебійної роботи через один публічний домен (`winner.srvrs.top`).
 
+## 📂 Структура Проєкту
+
+Для детальної інформації про кожну частину додатка, зверніться до відповідних розділів:
+- [**Backend Documentation**](./backend/README.md) ⚙️ — логіка бота, API та база даних.
+- [**Frontend Documentation**](./frontend/README.md) 🎨 — інтерфейс, дизайн та інтеграція з Mini App.
+
 ## 🛠️ Стек Технологій
 
 **Frontend:**
-*   React 18 + Vite (швидка збірка, HMR)
-*   Vanilla CSS (Стилізація Glassmorphism)
+*   React 19 + Vite 8
+*   Glassmorphism v3.4.1 (Custom CSS)
 *   Telegram Web App API
 
 **Backend:**
-*   Node.js (Express.js)
-*   grammY (Сучасний та швидкий фреймворк для Telegram-ботів)
-*   SQLite3 (Легка та надійна база даних)
+*   Node.js + Express.js
+*   grammY (Modern Bot Framework)
+*   SQLite3 (Embedded Database)
 
 ## 🚀 Встановлення та Запуск
 
