@@ -1,16 +1,47 @@
-# React + Vite
+# Karma Community Frontend 🎨
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Клієнтська частина Telegram Mini App для гейміфікації спільноти. Сучасний інтерфейс, побудований на найновіших технологіях 2026 року з акцентом на швидкість та естетику.
 
-Currently, two official plugins are available:
+## 🚀 Технологічний стек
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+- **[React 19](https://react.dev/):** Використання найновіших хуків та архітектурних паттернів для рендерингу.
+- **[Vite 8](https://vite.dev/):** Блискавична збірка та середовище розробки.
+- **[Telegram Web App SDK](https://core.telegram.org/bots/webapps):** Глибока інтеграція з інтерфейсом Telegram (теми, розширення, дані користувача).
+- **CSS Glassmorphism v3.4.1:** Авторська система стилів з ефектом матового скла та динамічними градієнтами.
 
-## React Compiler
+## ✨ Особливості інтерфейсу
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+1.  **Glassmorphism Design:** Повне розмиття фону (`backdrop-filter`), тонкі напівпрозорі межі та м'які тіні для створення ефекту глибини.
+2.  **Адаптивність до тем:** Автоматична синхронізація зі зміною теми в Telegram (Light/Dark mode) через CSS змінні `--tg-theme-*`.
+3.  **Real-time Leaderboard:** Таблиця лідерів з виділенням ТОП-3 призових місць (Gold, Silver, Bronze ефекти).
+4.  **Персоналізований профіль:** Закріплена панель "Мій профіль" з миттєвим відображенням позиції користувача та його карми.
 
-## Expanding the ESLint configuration
+## 📦 Встановлення та розгортання
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+### 1. Підготовка
+Переконайтеся, що бекенд запущений на порту `3015`.
+
+### 2. Клонування та залежності
+```bash
+cd frontend
+npm install
+```
+
+### 3. Запуск у режимі розробки
+```bash
+npm run dev -- --host 0.0.0.0
+```
+
+### 4. Збірка для продакшну
+```bash
+npm run build
+npm run preview -- --host 0.0.0.0 --port 5173
+```
+
+## 🛠️ Конфігурація (vite.config.js)
+Фронтенд налаштований на автоматичне проксіювання запитів до API:
+- Шлях `/api/*` автоматично перенаправляється на `http://localhost:3015`.
+- Домен `winner.srvrs.top` додано до `allowedHosts` для безпечної роботи через Cloudflare.
+
+---
+Created with ❤️ by [Weby Homelab](https://github.com/weby-homelab) • 2026
