@@ -44,4 +44,8 @@ npm run preview -- --host 0.0.0.0 --port 5173
 - Домен `winner.srvrs.top` додано до `allowedHosts` для безпечної роботи через Cloudflare.
 
 ---
-Created with ❤️ by [Weby Homelab](https://github.com/weby-homelab) • 2026
+<br>
+<p align="center">
+  Built in Ukraine under air raid sirens &amp; blackouts ⚡<br>
+  &copy; 2026 Weby Homelab
+</p>
