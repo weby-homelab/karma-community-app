@@ -26,7 +26,12 @@ function App() {
         // Fetch user profile if WebApp info is available
         const user = tg?.initDataUnsafe?.user;
         if (user && user.id) {
-          const profileRes = await fetch(`${apiUrl}/api/user/${user.id}`);
+          const queryParams = new URLSearchParams({
+            first_name: user.first_name || '',
+            username: user.username || ''
+          }).toString();
+          
+          const profileRes = await fetch(`${apiUrl}/api/user/${user.id}?${queryParams}`);
           if (profileRes.ok) {
             const profileData = await profileRes.json();
             setMyProfile(profileData);
