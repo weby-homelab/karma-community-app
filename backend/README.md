@@ -54,4 +54,8 @@ systemctl start karma-bot
 Бекенд налаштований на роботу за проксі (Vite Proxy) через основний домен `winner.srvrs.top`, що забезпечує захист від CORS проблем та приховує внутрішню структуру API.
 
 ---
-Created with ❤️ by [Weby Homelab](https://github.com/weby-homelab) • 2026
+<br>
+<p align="center">
+  Built in Ukraine under air raid sirens &amp; blackouts ⚡<br>
+  &copy; 2026 Weby Homelab
+</p>
