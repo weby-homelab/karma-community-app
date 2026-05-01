@@ -8,10 +8,10 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-app.get('/api/leaderboard', async (req, res) => {
+  app.get('/api/leaderboard', async (req, res) => {
   try {
     const db = await getDb();
-    const topUsers = await db.all('SELECT id, username, first_name, karma FROM users ORDER BY karma DESC LIMIT 50');
+    const topUsers = await db.all('SELECT id, username, first_name, karma FROM users ORDER BY karma DESC, id ASC LIMIT 50');
     res.json(topUsers);
   } catch (error) {
     console.error('Leaderboard error:', error);
@@ -61,10 +61,11 @@ app.listen(PORT, async () => {
   
   if (process.env.BOT_TOKEN && process.env.BOT_TOKEN !== 'DUMMY_TOKEN') {
     bot.start({
+      allowed_updates: ["message", "message_reaction", "callback_query"],
       onStart: (botInfo) => {
         console.log(`Bot @${botInfo.username} started!`);
       }
-    });
+    }).catch(err => console.error('Bot start error:', err));
   } else {
     console.log('BOT_TOKEN not provided, bot polling not started.');
   }
