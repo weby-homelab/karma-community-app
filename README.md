@@ -1,7 +1,6 @@
 # Karma Community App 🏆
 
 <p align="center">
-  <img src="assets/karma-community-app-1.png" width="400" />
   <img src="assets/karma-community-app-2.png" width="400" />
 </p>
 
