@@ -9,7 +9,7 @@ const app = express();
 
 // Enable if you're behind a reverse proxy (Heroku, Bluemix, AWS ELB, Nginx, etc)
 // see https://expressjs.com/en/guide/behind-proxies.html
-app.set('trust proxy', 1);
+app.set('trust proxy', process.env.TRUST_PROXY || 1);
 
 const apiLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
@@ -20,10 +20,11 @@ const apiLimiter = rateLimit({
 });
 
 app.use(cors());
-app.use(express.json());
 
-// Apply the rate limiting middleware to API calls only
+// Apply the rate limiting middleware to API calls only, BEFORE body parser
 app.use('/api', apiLimiter);
+
+app.use(express.json());
 
   app.get('/api/leaderboard', async (req, res) => {
   try {
