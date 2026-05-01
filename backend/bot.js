@@ -82,7 +82,7 @@ bot.on('message_reaction', async (ctx) => {
   
   if (karmaDelta !== 0) {
     // Update user karma
-    await db.run('UPDATE users SET karma = karma + ? WHERE id = ?', [karmaDelta, authorId]);
+    await db.run('UPDATE users SET karma = MAX(0, karma + ?) WHERE id = ?', [karmaDelta, authorId]);
   }
 });
 
