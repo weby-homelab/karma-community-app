@@ -5,6 +5,7 @@ function App() {
   const [leaderboard, setLeaderboard] = useState([]);
   const [myProfile, setMyProfile] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [settings, setSettings] = useState({ site_title: '🏆 Рейтинг активності', bot_name: '' });
 
   useEffect(() => {
     // Expand Telegram Web App
@@ -18,6 +19,14 @@ function App() {
       try {
         const apiUrl = import.meta.env.VITE_API_URL || '';
         
+        // Fetch Settings
+        const settingsRes = await fetch(`${apiUrl}/api/settings`);
+        if (settingsRes.ok) {
+          const settingsData = await settingsRes.json();
+          setSettings(settingsData);
+          document.title = settingsData.site_title || '🏆 Рейтинг активності';
+        }
+
         // Fetch Leaderboard
         const res = await fetch(`${apiUrl}/api/leaderboard`);
         const data = await res.json();
@@ -64,7 +73,7 @@ function App() {
   return (
     <>
       <div className="glass-panel header">
-        <h1>🏆 Рейтинг чату 🔆 Симиренка</h1>
+        <h1>{settings.site_title || '🏆 Рейтинг KRUHLYK Community'}</h1>
         <p>Карма нараховується за реакції (🔥, ❤️) на ваші повідомлення.</p>
       </div>
 
