@@ -2,10 +2,12 @@ require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
 const rateLimit = require('express-rate-limit');
+const multer = require('multer');
 const { getDb } = require('./db');
 const bot = require('./bot');
 
 const app = express();
+const upload = multer({ storage: multer.memoryStorage() });
 
 // Enable if you're behind a reverse proxy (Heroku, Bluemix, AWS ELB, Nginx, etc)
 // see https://expressjs.com/en/guide/behind-proxies.html
@@ -31,6 +33,80 @@ app.use(cors());
 app.use('/api', apiLimiter);
 
 app.use(express.json());
+
+const VALID_EMOJIS = ['🔥', '❤️', '👍', '👏', '🏆', '💯', '⚡'];
+
+app.post('/api/admin/upload-json', upload.single('file'), async (req, res) => {
+  try {
+    const password = req.body.password;
+    const adminPassword = process.env.ADMIN_PASSWORD || '[REDACTED]';
+    
+    if (password !== adminPassword) {
+      return res.status(401).send('Невірний пароль');
+    }
+
+    if (!req.file) {
+      return res.status(400).send('Файл не знайдено');
+    }
+
+    const data = JSON.parse(req.file.buffer.toString('utf8'));
+    const messages = data.messages || [];
+    
+    const db = await getDb();
+    const userMap = new Map();
+
+    for (const msg of messages) {
+      if (!msg.from_id || typeof msg.from_id !== 'string' || !msg.from_id.startsWith('user')) {
+        continue;
+      }
+      
+      const userId = parseInt(msg.from_id.replace('user', ''), 10);
+      const firstName = msg.from || 'Unknown';
+      let karmaToAdd = 0;
+      
+      if (msg.reactions && Array.isArray(msg.reactions)) {
+        for (const reaction of msg.reactions) {
+          if (reaction.type === 'emoji' && VALID_EMOJIS.includes(reaction.emoji)) {
+            karmaToAdd += reaction.count || 1;
+          }
+        }
+      }
+      
+      if (!userMap.has(userId)) {
+        userMap.set(userId, { id: userId, first_name: firstName, username: '', karma: 0 });
+      }
+      
+      if (karmaToAdd > 0) {
+        const u = userMap.get(userId);
+        u.karma += karmaToAdd;
+        u.first_name = firstName;
+      }
+    }
+    
+    await db.exec('DELETE FROM users;');
+    await db.exec('DELETE FROM messages;');
+    
+    await db.exec('BEGIN TRANSACTION');
+    const stmt = await db.prepare(
+      `INSERT INTO users (id, username, first_name, karma) VALUES (?, ?, ?, ?)
+       ON CONFLICT(id) DO UPDATE SET first_name=excluded.first_name, karma=users.karma + excluded.karma`
+    );
+    
+    for (const u of userMap.values()) {
+      if (u.karma > 0) {
+        await stmt.run([u.id, u.username, u.first_name, u.karma]);
+      }
+    }
+    
+    await stmt.finalize();
+    await db.exec('COMMIT');
+
+    res.status(200).send('Успішно оновлено');
+  } catch (error) {
+    console.error('Upload error:', error);
+    res.status(500).send('Внутрішня помилка сервера під час обробки файлу');
+  }
+});
 
   app.get('/api/leaderboard', async (req, res) => {
   try {
