@@ -92,9 +92,9 @@ async function startBot(token, webAppUrl, targetChatId) {
 async function registerUser(db, user) {
   if (!user || user.is_bot) return;
   await db.run(
-    `INSERT INTO users (id, username, first_name) VALUES (?, ?, ?)
+    `INSERT INTO users (id, username, first_name, join_date) VALUES (?, ?, ?, ?)
      ON CONFLICT(id) DO UPDATE SET username=excluded.username, first_name=excluded.first_name`,
-    [user.id, user.username, user.first_name]
+    [user.id, user.username, user.first_name, Math.floor(Date.now() / 1000)]
   );
 }
 

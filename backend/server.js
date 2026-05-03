@@ -131,6 +131,7 @@ app.post('/api/admin/upload-json', upload.single('file'), async (req, res) => {
       
       const userId = parseInt(msg.from_id.replace('user', ''), 10);
       const firstName = msg.from || 'Unknown';
+      const msgDate = parseInt(msg.date_unixtime || '9999999999', 10);
       let karmaToAdd = 0;
       
       if (msg.reactions && Array.isArray(msg.reactions)) {
@@ -142,7 +143,12 @@ app.post('/api/admin/upload-json', upload.single('file'), async (req, res) => {
       }
       
       if (!userMap.has(userId)) {
-        userMap.set(userId, { id: userId, first_name: firstName, username: '', karma: 0 });
+        userMap.set(userId, { id: userId, first_name: firstName, username: '', karma: 0, join_date: msgDate });
+      } else {
+        const u = userMap.get(userId);
+        if (msgDate < u.join_date) {
+          u.join_date = msgDate;
+        }
       }
       
       if (karmaToAdd > 0) {
@@ -157,14 +163,13 @@ app.post('/api/admin/upload-json', upload.single('file'), async (req, res) => {
     
     await db.exec('BEGIN TRANSACTION');
     const stmt = await db.prepare(
-      `INSERT INTO users (id, username, first_name, karma) VALUES (?, ?, ?, ?)
-       ON CONFLICT(id) DO UPDATE SET first_name=excluded.first_name, karma=users.karma + excluded.karma`
+      `INSERT INTO users (id, username, first_name, karma, join_date) VALUES (?, ?, ?, ?, ?)
+       ON CONFLICT(id) DO UPDATE SET first_name=excluded.first_name, karma=users.karma + excluded.karma, join_date=MIN(users.join_date, excluded.join_date)`
     );
     
     for (const u of userMap.values()) {
-      if (u.karma > 0) {
-        await stmt.run([u.id, u.username, u.first_name, u.karma]);
-      }
+      // Insert all users, even those with 0 karma
+      await stmt.run([u.id, u.username, u.first_name, u.karma, u.join_date]);
     }
     
     await stmt.finalize();
@@ -180,7 +185,7 @@ app.post('/api/admin/upload-json', upload.single('file'), async (req, res) => {
   app.get('/api/leaderboard', async (req, res) => {
   try {
     const db = await getDb();
-    const topUsers = await db.all('SELECT id, username, first_name, karma FROM users ORDER BY karma DESC, id ASC LIMIT 50');
+    const topUsers = await db.all('SELECT id, username, first_name, karma FROM users ORDER BY karma DESC, join_date ASC, id ASC LIMIT 50');
     res.json(topUsers);
   } catch (error) {
     console.error('Leaderboard error:', error);
@@ -194,25 +199,25 @@ app.get('/api/user/:id', async (req, res) => {
     const { username, first_name } = req.query;
     const db = await getDb();
     
-    let user = await db.get('SELECT id, username, first_name, karma FROM users WHERE id = ?', id);
+    let user = await db.get('SELECT id, username, first_name, karma, join_date FROM users WHERE id = ?', id);
     
     // Auto-register if user not found and info is provided
     if (!user && first_name) {
       await db.run(
-        'INSERT INTO users (id, username, first_name, karma) VALUES (?, ?, ?, 0)',
-        [id, username || '', first_name]
+        'INSERT INTO users (id, username, first_name, karma, join_date) VALUES (?, ?, ?, 0, ?)',
+        [id, username || '', first_name, Math.floor(Date.now() / 1000)]
       );
-      user = { id: parseInt(id), username: username || '', first_name, karma: 0 };
+      user = { id: parseInt(id), username: username || '', first_name, karma: 0, join_date: Math.floor(Date.now() / 1000) };
     }
 
     if (!user) {
       return res.status(404).json({ error: 'User not found' });
     }
 
-    // Rank logic: count users with more karma OR same karma but older account (smaller ID)
+    // Rank logic: count users with more karma OR same karma but older account (smaller join_date) OR same karma and join_date but smaller ID
     const rankData = await db.get(
-      'SELECT COUNT(*) as rank FROM users WHERE karma > ? OR (karma = ? AND id <= ?)',
-      [user.karma, user.karma, user.id]
+      'SELECT COUNT(*) as rank FROM users WHERE karma > ? OR (karma = ? AND join_date < ?) OR (karma = ? AND join_date = ? AND id <= ?)',
+      [user.karma, user.karma, user.join_date, user.karma, user.join_date, user.id]
     );
     
     res.json({ ...user, rank: rankData.rank });
