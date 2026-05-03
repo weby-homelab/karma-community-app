@@ -1,35 +1,115 @@
-import { useState } from 'react';
-import './index.css'; // Re-use the existing styles
+import { useState, useEffect } from 'react';
+import './index.css';
 
 export default function Admin() {
   const [password, setPassword] = useState('');
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [activeTab, setActiveTab] = useState('settings');
+  
+  // Settings State
+  const [settings, setSettings] = useState({
+    site_title: '',
+    bot_token: '',
+    webapp_url: '',
+    admin_password: ''
+  });
+  
+  // File Upload State
   const [file, setFile] = useState(null);
+  
+  // UI State
   const [status, setStatus] = useState('');
   const [loading, setLoading] = useState(false);
 
+  const apiUrl = import.meta.env.VITE_API_URL || '';
+
+  const handleLogin = async (e) => {
+    e.preventDefault();
+    setLoading(true);
+    setStatus('');
+    
+    try {
+      const res = await fetch(`${apiUrl}/api/admin/login`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ password })
+      });
+      
+      if (res.ok) {
+        setIsLoggedIn(true);
+        fetchSettings();
+      } else {
+        setStatus('❌ Невірний пароль');
+      }
+    } catch (err) {
+      setStatus(`❌ Помилка: ${err.message}`);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const fetchSettings = async () => {
+    try {
+      const res = await fetch(`${apiUrl}/api/admin/settings/view`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ password })
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setSettings(prev => ({ ...prev, ...data }));
+      }
+    } catch (err) {
+      console.error('Fetch settings error:', err);
+    }
+  };
+
+  const handleSaveSettings = async (e) => {
+    e.preventDefault();
+    setLoading(true);
+    setStatus('Збереження та перезапуск бота...');
+    
+    try {
+      const res = await fetch(`${apiUrl}/api/admin/settings`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ password, newSettings: settings })
+      });
+      
+      if (res.ok) {
+        setStatus('✅ Налаштування збережено! Бот перезапускається (зачекайте пару секунд).');
+      } else {
+        setStatus('❌ Помилка збереження');
+      }
+    } catch (err) {
+      setStatus(`❌ Помилка: ${err.message}`);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const handleUpload = async (e) => {
     e.preventDefault();
-    if (!password || !file) {
-      setStatus('Будь ласка, введіть пароль та оберіть файл.');
+    if (!file) {
+      setStatus('Будь ласка, оберіть файл.');
       return;
     }
 
     setLoading(true);
-    setStatus('Завантаження...');
+    setStatus('Завантаження та обробка...');
 
     const formData = new FormData();
     formData.append('file', file);
     formData.append('password', password);
 
     try {
-      const apiUrl = import.meta.env.VITE_API_URL || '';
       const res = await fetch(`${apiUrl}/api/admin/upload-json`, {
         method: 'POST',
         body: formData,
       });
 
       if (res.ok) {
-        setStatus('✅ Рейтинг успішно оновлено!');
+        setStatus('✅ Базу успішно очищено та оновлено з нового файлу!');
       } else {
         const errorText = await res.text();
         setStatus(`❌ Помилка: ${errorText}`);
@@ -41,41 +121,80 @@ export default function Admin() {
     }
   };
 
-  return (
-    <>
-      <div className="glass-panel header">
-        <h1>🔒 Адмін-панель</h1>
-        <p>Оновлення рейтингу KRUHLYK Community.</p>
-      </div>
-
-      <div className="glass-panel">
-        <form onSubmit={handleUpload} style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
-          <div>
-            <label style={{ display: 'block', marginBottom: '5px' }}>Пароль:</label>
+  if (!isLoggedIn) {
+    return (
+      <>
+        <div className="glass-panel header">
+          <h1>🔒 Вхід в Адмін-панель</h1>
+          <p>Введіть пароль адміністратора для керування системою.</p>
+        </div>
+        <div className="glass-panel">
+          <form onSubmit={handleLogin} style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
             <input 
               type="password" 
+              placeholder="Пароль"
               value={password} 
               onChange={(e) => setPassword(e.target.value)} 
               style={{ width: '100%', padding: '10px', borderRadius: '5px', border: '1px solid #444', background: '#222', color: '#fff' }}
             />
-          </div>
-          <div>
-            <label style={{ display: 'block', marginBottom: '5px' }}>Файл JSON (result.json):</label>
-            <input 
-              type="file" 
-              accept=".json"
-              onChange={(e) => setFile(e.target.files[0])} 
-              style={{ width: '100%', padding: '10px' }}
-            />
-          </div>
-          <button 
-            type="submit" 
-            disabled={loading}
-            style={{ padding: '12px', background: '#0088cc', color: '#fff', border: 'none', borderRadius: '5px', cursor: 'pointer', fontWeight: 'bold' }}
-          >
-            {loading ? 'Обробка...' : 'Завантажити та Оновити'}
-          </button>
-        </form>
+            <button type="submit" disabled={loading} style={{ padding: '12px', background: '#0088cc', color: '#fff', border: 'none', borderRadius: '5px', cursor: 'pointer' }}>
+              {loading ? 'Перевірка...' : 'Увійти'}
+            </button>
+          </form>
+          {status && <div style={{ marginTop: '15px', color: '#ff6b6b' }}>{status}</div>}
+        </div>
+      </>
+    );
+  }
+
+  return (
+    <>
+      <div className="glass-panel header">
+        <h1>⚙️ Адмін-панель</h1>
+        <div style={{ display: 'flex', gap: '10px', justifyContent: 'center', marginTop: '15px' }}>
+          <button onClick={() => {setActiveTab('settings'); setStatus('');}} style={{ padding: '8px 15px', background: activeTab === 'settings' ? '#0088cc' : '#444', color: '#fff', border: 'none', borderRadius: '5px', cursor: 'pointer' }}>Налаштування</button>
+          <button onClick={() => {setActiveTab('data'); setStatus('');}} style={{ padding: '8px 15px', background: activeTab === 'data' ? '#0088cc' : '#444', color: '#fff', border: 'none', borderRadius: '5px', cursor: 'pointer' }}>Імпорт Даних</button>
+        </div>
+      </div>
+
+      <div className="glass-panel">
+        {activeTab === 'settings' ? (
+          <form onSubmit={handleSaveSettings} style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
+            <div>
+              <label style={{ display: 'block', marginBottom: '5px', fontSize: '0.9rem', color: '#ccc' }}>Заголовок сайту:</label>
+              <input type="text" value={settings.site_title || ''} onChange={e => setSettings({...settings, site_title: e.target.value})} placeholder="🏆 Рейтинг KRUHLYK Community" style={{ width: '100%', padding: '10px', borderRadius: '5px', border: '1px solid #444', background: '#222', color: '#fff' }} />
+            </div>
+            <div>
+              <label style={{ display: 'block', marginBottom: '5px', fontSize: '0.9rem', color: '#ccc' }}>Telegram Bot Token:</label>
+              <input type="text" value={settings.bot_token || ''} onChange={e => setSettings({...settings, bot_token: e.target.value})} placeholder="123456789:ABCdefGHIjklmNOPqrsTUVwxyz" style={{ width: '100%', padding: '10px', borderRadius: '5px', border: '1px solid #444', background: '#222', color: '#fff' }} />
+            </div>
+            <div>
+              <label style={{ display: 'block', marginBottom: '5px', fontSize: '0.9rem', color: '#ccc' }}>Chat ID (опціонально, напр. -100123456789):</label>
+              <input type="text" value={settings.chat_id || ''} onChange={e => setSettings({...settings, chat_id: e.target.value})} placeholder="-100123456789" style={{ width: '100%', padding: '10px', borderRadius: '5px', border: '1px solid #444', background: '#222', color: '#fff' }} />
+            </div>
+            <div>
+              <label style={{ display: 'block', marginBottom: '5px', fontSize: '0.9rem', color: '#ccc' }}>WebApp URL (для кнопки Start):</label>
+              <input type="text" value={settings.webapp_url || ''} onChange={e => setSettings({...settings, webapp_url: e.target.value})} placeholder="https://kruhlyk.srvrs.top/" style={{ width: '100%', padding: '10px', borderRadius: '5px', border: '1px solid #444', background: '#222', color: '#fff' }} />
+            </div>
+            <div>
+              <label style={{ display: 'block', marginBottom: '5px', fontSize: '0.9rem', color: '#ccc' }}>Змінити пароль Адміна (залиште пустим, якщо не треба):</label>
+              <input type="text" value={settings.admin_password || ''} onChange={e => setSettings({...settings, admin_password: e.target.value})} placeholder="Новий пароль..." style={{ width: '100%', padding: '10px', borderRadius: '5px', border: '1px solid #444', background: '#222', color: '#fff' }} />
+            </div>
+            <button type="submit" disabled={loading} style={{ padding: '12px', background: '#28a745', color: '#fff', border: 'none', borderRadius: '5px', cursor: 'pointer', fontWeight: 'bold' }}>
+              {loading ? 'Збереження...' : '💾 Зберегти налаштування'}
+            </button>
+          </form>
+        ) : (
+          <form onSubmit={handleUpload} style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
+            <div>
+              <label style={{ display: 'block', marginBottom: '5px', fontSize: '0.9rem', color: '#ccc' }}>Експорт історії (result.json):</label>
+              <input type="file" accept=".json" onChange={(e) => setFile(e.target.files[0])} style={{ width: '100%', padding: '10px' }} />
+            </div>
+            <button type="submit" disabled={loading} style={{ padding: '12px', background: '#0088cc', color: '#fff', border: 'none', borderRadius: '5px', cursor: 'pointer', fontWeight: 'bold' }}>
+              {loading ? 'Обробка...' : '🔄 Очистити базу та Завантажити JSON'}
+            </button>
+          </form>
+        )}
         
         {status && (
           <div style={{ marginTop: '20px', padding: '10px', borderRadius: '5px', background: 'rgba(255,255,255,0.1)' }}>
