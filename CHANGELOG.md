@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.5.0] - 2026-05-03
+### Added
+- **Dynamic Settings via Admin Panel**: You can now configure Site Title, Telegram Bot Token, WebApp URL, and Chat ID dynamically via the `/admin` interface without touching `.env` or code.
+- **Easy Onboarding**: Database now auto-generates a `settings` table to store configurations securely via SQLite.
+- **Target Chat Restrictions**: The bot can now optionally be restricted to a specific Telegram Chat ID.
+
 ## [0.4.0] - 2026-05-03
 ### Added
 - **Admin Panel**: Added protected `/admin` route with UI for uploading `result.json` backups.
