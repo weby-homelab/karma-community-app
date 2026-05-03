@@ -5,6 +5,7 @@ function App() {
   const [leaderboard, setLeaderboard] = useState([]);
   const [myProfile, setMyProfile] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const [settings, setSettings] = useState({ site_title: '🏆 Рейтинг активності', bot_name: '' });
 
   useEffect(() => {
@@ -15,21 +16,34 @@ function App() {
       tg.expand();
     }
 
+    const fetchWithRetry = async (url, retries = 5, delay = 2000) => {
+      for (let i = 0; i < retries; i++) {
+        try {
+          const res = await fetch(url);
+          if (!res.ok) throw new Error('Bad response');
+          return await res.json();
+        } catch (err) {
+          if (i === retries - 1) throw err;
+          await new Promise(resolve => setTimeout(resolve, delay));
+        }
+      }
+    };
+
     const fetchData = async () => {
       try {
         const apiUrl = import.meta.env.VITE_API_URL || '';
         
         // Fetch Settings
-        const settingsRes = await fetch(`${apiUrl}/api/settings`);
-        if (settingsRes.ok) {
-          const settingsData = await settingsRes.json();
+        try {
+          const settingsData = await fetchWithRetry(`${apiUrl}/api/settings`, 5, 2000);
           setSettings(settingsData);
           document.title = settingsData.site_title || '🏆 Рейтинг активності';
+        } catch (e) {
+          console.warn('Could not fetch settings, using defaults');
         }
 
         // Fetch Leaderboard
-        const res = await fetch(`${apiUrl}/api/leaderboard`);
-        const data = await res.json();
+        const data = await fetchWithRetry(`${apiUrl}/api/leaderboard`, 5, 2000);
         setLeaderboard(data);
 
         // Fetch user profile if WebApp info is available
@@ -40,12 +54,11 @@ function App() {
             username: user.username || ''
           }).toString();
           
-          const profileRes = await fetch(`${apiUrl}/api/user/${user.id}?${queryParams}`);
-          if (profileRes.ok) {
-            const profileData = await profileRes.json();
+          try {
+            const profileData = await fetchWithRetry(`${apiUrl}/api/user/${user.id}?${queryParams}`, 3, 1000);
             setMyProfile(profileData);
-          } else {
-            // User not found in DB yet
+          } catch (e) {
+            // User not found or server error
             setMyProfile({
               first_name: user.first_name,
               karma: 0,
@@ -55,6 +68,7 @@ function App() {
         }
       } catch (error) {
         console.error('Error fetching data:', error);
+        setError('Сервер тимчасово недоступний (можливо, перезапускається). Спробуйте оновити сторінку за хвилину.');
       } finally {
         setLoading(false);
       }
@@ -80,6 +94,8 @@ function App() {
       <div className="glass-panel">
         {loading ? (
           <div className="loader">Завантаження рейтингу...</div>
+        ) : error ? (
+          <div className="loader" style={{ color: '#ff6b6b' }}>{error}</div>
         ) : leaderboard.length === 0 ? (
           <div className="loader">Рейтинг поки порожній. Залиште першу реакцію!</div>
         ) : (

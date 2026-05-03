@@ -2,6 +2,10 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.6.1] - 2026-05-03
+### Fixed
+- **Frontend Empty State Bug**: Added a robust retry mechanism to the frontend. It now gracefully waits and reconnects if the backend is temporarily unavailable (e.g., during the automatic restart triggered by saving settings in the Admin panel), preventing the leaderboard from falsely showing as empty.
+
 ## [0.6.0] - 2026-05-03
 ### Added
 - **Zero Karma Tracking**: Users with 0 karma now appear on the leaderboard after a JSON data import.
