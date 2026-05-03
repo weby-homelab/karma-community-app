@@ -4,7 +4,8 @@ const cors = require('cors');
 const rateLimit = require('express-rate-limit');
 const multer = require('multer');
 const { getDb } = require('./db');
-const bot = require('./bot');
+const { getSettings, updateSettings } = require('./settings');
+const { startBot } = require('./bot');
 
 const app = express();
 const upload = multer({ storage: multer.memoryStorage() });
@@ -36,10 +37,78 @@ app.use(express.json());
 
 const VALID_EMOJIS = ['🔥', '❤️', '👍', '👏', '🏆', '💯', '⚡'];
 
+app.get('/api/settings', async (req, res) => {
+  try {
+    const settings = await getSettings();
+    res.json({
+      site_title: settings.site_title || '🏆 Рейтинг активності',
+      bot_name: settings.bot_name || ''
+    });
+  } catch (error) {
+    console.error('Settings error:', error);
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
+});
+
+app.post('/api/admin/login', async (req, res) => {
+  try {
+    const { password } = req.body;
+    const settings = await getSettings();
+    const adminPassword = settings.admin_password || process.env.ADMIN_PASSWORD || 'AddMax13$';
+    
+    if (password === adminPassword) {
+      res.json({ success: true });
+    } else {
+      res.status(401).json({ error: 'Невірний пароль' });
+    }
+  } catch (error) {
+    res.status(500).json({ error: 'Помилка сервера' });
+  }
+});
+
+app.post('/api/admin/settings', async (req, res) => {
+  try {
+    const { password, newSettings } = req.body;
+    const settings = await getSettings();
+    const adminPassword = settings.admin_password || process.env.ADMIN_PASSWORD || 'AddMax13$';
+    
+    if (password !== adminPassword) {
+      return res.status(401).send('Невірний пароль');
+    }
+
+    await updateSettings(newSettings);
+    res.json({ success: true });
+    
+    // Restart process to apply bot token changes if running under PM2/Systemd
+    setTimeout(() => process.exit(0), 1000);
+  } catch (error) {
+    console.error('Update settings error:', error);
+    res.status(500).send('Помилка сервера');
+  }
+});
+
+app.post('/api/admin/settings/view', async (req, res) => {
+  try {
+    const { password } = req.body;
+    const settings = await getSettings();
+    const adminPassword = settings.admin_password || process.env.ADMIN_PASSWORD || 'AddMax13$';
+    
+    if (password !== adminPassword) {
+      return res.status(401).send('Невірний пароль');
+    }
+
+    res.json(settings);
+  } catch (error) {
+    console.error('Get settings error:', error);
+    res.status(500).send('Помилка сервера');
+  }
+});
+
 app.post('/api/admin/upload-json', upload.single('file'), async (req, res) => {
   try {
     const password = req.body.password;
-    const adminPassword = process.env.ADMIN_PASSWORD || 'AddMax13$';
+    const settings = await getSettings();
+    const adminPassword = settings.admin_password || process.env.ADMIN_PASSWORD || 'AddMax13$';
     
     if (password !== adminPassword) {
       return res.status(401).send('Невірний пароль');
@@ -159,14 +228,14 @@ app.listen(PORT, async () => {
   console.log(`API Server running on port ${PORT}`);
   await getDb();
   
-  if (process.env.BOT_TOKEN && process.env.BOT_TOKEN !== 'DUMMY_TOKEN') {
-    bot.start({
-      allowed_updates: ["message", "message_reaction", "callback_query"],
-      onStart: (botInfo) => {
-        console.log(`Bot @${botInfo.username} started!`);
-      }
-    }).catch(err => console.error('Bot start error:', err));
+  const settings = await getSettings();
+  const token = settings.bot_token || process.env.BOT_TOKEN;
+  const webAppUrl = settings.webapp_url || 'https://kruhlyk.srvrs.top/';
+  const chatId = settings.chat_id || '';
+  
+  if (token && token !== 'DUMMY_TOKEN') {
+    startBot(token, webAppUrl, chatId);
   } else {
-    console.log('BOT_TOKEN not provided, bot polling not started.');
+    console.log('BOT_TOKEN not provided in DB or .env, bot polling not started.');
   }
 });
