@@ -15,7 +15,8 @@ async function getDb() {
           id INTEGER PRIMARY KEY,
           username TEXT,
           first_name TEXT,
-          karma INTEGER DEFAULT 0
+          karma INTEGER DEFAULT 0,
+          join_date INTEGER DEFAULT 9999999999
         );
         CREATE TABLE IF NOT EXISTS messages (
           message_id INTEGER,
@@ -28,6 +29,13 @@ async function getDb() {
           value TEXT
         );
       `);
+      
+      try {
+        await db.exec('ALTER TABLE users ADD COLUMN join_date INTEGER DEFAULT 9999999999;');
+      } catch (e) {
+        // Column likely already exists
+      }
+      
       return db;
     });
   }
