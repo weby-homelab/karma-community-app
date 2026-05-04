@@ -7,7 +7,7 @@ let dbPromise;
 async function getDb() {
   if (!dbPromise) {
     dbPromise = open({
-      filename: path.join(__dirname, 'karma.db'),
+      filename: process.env.DB_PATH || path.join(__dirname, 'karma.db'),
       driver: sqlite3.Database
     }).then(async (db) => {
       await db.exec(`
