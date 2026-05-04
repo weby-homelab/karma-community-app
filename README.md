@@ -1,24 +1,36 @@
-# Karma Community App 🏆
+# Karma Community App 🏆 (Docker Edition)
 
 <p align="center">
   <img src="Karma-community-App-5.png" width="400" alt="Karma Community App Screenshot" />
 </p>
 
-Сучасний Telegram Mini App для гейміфікації спільноти. Створено з використанням найновіших трендів 2026 року — нарахування "карми" через емодзі-реакції (🔥, ❤️, 👍 та інші) з відображенням таблиці лідерів у стильному інтерфейсі.
+Сучасний Telegram Mini App для гейміфікації спільноти. Ця версія оптимізована для роботи в **Docker**-середовищі, підтримує легке горизонтальне масштабування (multi-tenancy) та віддачу статичного React-застосунку прямо через вбудований Node.js сервер.
 
-![Karma Community App Banner](https://img.shields.io/badge/Status-Active-success) ![License](https://img.shields.io/badge/License-MIT-blue) ![Stack](https://img.shields.io/badge/Stack-Node.js%20|%20React%20|%20Vite-blueviolet)
+![Karma Community App Banner](https://img.shields.io/badge/Status-Active-success) ![License](https://img.shields.io/badge/License-MIT-blue) ![Stack](https://img.shields.io/badge/Stack-Node.js%20|%20Docker%20|%20SQLite-blueviolet)
 
-## 🏗️ Архітектура Системи
+## 🏗️ Архітектура Системи (Docker)
 
 ```mermaid
 graph TD
     %% Nodes definition
     User((👤 Користувач))
     TG[Telegram App]
-    Bot[🤖 Telegram Bot<br/><i>grammY / Node.js</i>]
-    API[⚙️ REST API<br/><i>Express / Node.js</i>]
-    DB[(🗄️ SQLite Database<br/><i>Karma & Messages</i>)]
-    WebApp[🎨 Mini App UI<br/><i>React 19 / Vite 8</i>]
+    
+    subgraph "Docker Host"
+      Proxy[🌐 Reverse Proxy<br/><i>Cloudflared / Nginx / Traefik</i>]
+      
+      subgraph "karma-community-app (Container)"
+        Node[🟢 Node.js 22<br/><i>Express + grammY + React SPA</i>]
+      end
+      
+      DB[(🗄️ SQLite Data Volume<br/><i>./data/karma.db</i>)]
+    end
+
+    %% Connections
+    User -->|Взаємодія / Реакції| TG
+    TG <-->|Events / Commands / UI| Proxy
+    Proxy <--> Node
+    Node <-->|Read/Write| DB
 
     %% Styles
     classDef primary fill:#646cff,stroke:#fff,stroke-width:2px,color:#fff
@@ -26,91 +38,54 @@ graph TD
     classDef highlight fill:#ff9a9e,stroke:#fff,stroke-width:2px,color:#000
     classDef storage fill:#a18cd1,stroke:#fff,stroke-width:1px,color:#fff
 
-    class Bot,API primary
-    class WebApp highlight
+    class Node primary
+    class Proxy highlight
     class DB storage
     class TG secondary
-
-    %% Connections
-    User -->|Взаємодія / Реакції| TG
-    TG <-->|Events / Commands| Bot
-    TG <-->|Launch / WebApp API| WebApp
-    Bot -->|Запис карми| DB
-    WebApp <-->|JSON Data| API
-    API <-->|SQL Queries| DB
-
-    %% Annotations
-    subgraph "Backend (Cloudflare Tunnel)"
-    Bot
-    API
-    DB
-    end
-
-    subgraph "Client Side"
-    WebApp
-    end
 ```
 
 ---
 
 ## 🌟 Можливості (Features)
 
-*   **Тиха Гейміфікація:** Карма нараховується виключно за емодзі-реакції на повідомлення. Ніякого текстового спаму типу "+1 до карми" у чатах!
-*   **Гарний Інтерфейс (Glassmorphism):** Сучасний, адаптивний дизайн, розроблений за концепцією Glassmorphism (v3.4.1), ідеально виглядає у світлій та темній темах Telegram.
-*   **Інтеграція з Telegram Web App:** Нативний досвід користувача прямо всередині месенджера. Запуск через кнопку `Menu Button`.
-*   **Real-time оновлення бази:** SQLite база миттєво фіксує всі змінені та видалені реакції. Бот рахує дельту та забезпечує справедливу карму.
-*   **Безпека та CORS:** Бекенд приховано за проксі від Vite (Node.js/Express) для безперебійної роботи через один публічний домен (`winner.srvrs.top`).
+*   **Тиха Гейміфікація:** Карма нараховується виключно за емодзі-реакції на повідомлення.
+*   **Docker-First:** Один надлегкий образ на базі Alpine/Debian slim, який містить в собі як Telegram-бота, так і зібраний Frontend.
+*   **Мульти-інстанс:** Легко запускайте 3, 5 або 10 копій ботів для різних спільнот на одному сервері через єдиний `docker-compose.yml`.
+*   **Гарний Інтерфейс (Glassmorphism):** Сучасний, адаптивний дизайн.
 
-## 📂 Структура Проєкту
+## 🚀 Швидкий старт (Docker Compose)
 
-Для детальної інформації про кожну частину додатка, зверніться до відповідних розділів:
-- [**Backend Documentation**](./backend/README.md) ⚙️ — логіка бота, API та база даних.
-- [**Frontend Documentation**](./frontend/README.md) 🎨 — інтерфейс, дизайн та інтеграція з Mini App.
+Найпростіший спосіб розгорнути додаток:
 
-## 🛠️ Стек Технологій
-
-**Frontend:**
-*   React 19 + Vite 8
-*   Glassmorphism v3.4.1 (Custom CSS)
-*   Telegram Web App API
-
-**Backend:**
-*   Node.js + Express.js
-*   grammY (Modern Bot Framework)
-*   SQLite3 (Embedded Database)
-
-## 🚀 Встановлення та Запуск
-
-1.  **Клонування репозиторію:**
+1.  **Створіть робочу директорію:**
     ```bash
-    git clone https://github.com/weby-homelab/karma-community-app.git
-    cd karma-community-app
+    mkdir karma-app && cd karma-app
     ```
 
-2.  **Налаштування бекенду:**
-    ```bash
-    cd backend
-    npm install
-    # Створіть файл .env:
-    echo "BOT_TOKEN=Ваш_Telegram_Бот_Токен" > .env
-    echo "PORT=3015" >> .env
-    # Запустіть бекенд:
-    node server.js
+2.  **Створіть `docker-compose.yml`:**
+    ```yaml
+    version: '3.8'
+    services:
+      karma-bot:
+        image: webyhomelab/karma-community-app:latest
+        container_name: karma-bot
+        restart: unless-stopped
+        ports:
+          - "3015:3000"
+        environment:
+          - BOT_TOKEN=Ваш_Telegram_Бот_Токен
+          - DB_PATH=/app/backend/data/karma.db
+        volumes:
+          - ./data:/app/backend/data
     ```
 
-3.  **Налаштування фронтенду:**
+3.  **Запустіть:**
     ```bash
-    cd ../frontend
-    npm install
-    # Для розробки:
-    npm run dev -- --host
-    # Для продакшену:
-    npm run build
+    docker compose up -d
     ```
+Додаток буде доступний на порту 3015. Всі дані надійно зберігаються у папці `./data/`.
 
-4.  **Підключення бота в Telegram:**
-    *   Додайте свого бота (наприклад, `@Monitor_DRivers_bot`) як адміністратора до вашої супергрупи.
-    *   Налаштуйте `Menu Button` через `@BotFather`, щоб він відкривав вашу веб-адресу з фронтендом.
+Для класичного запуску на "голому залізі" (bare-metal) без Docker, використовуйте гілку `classic`.
 
 ## 🤝 Контриб'ютори
 Будь-які Pull Requests (PR) дуже вітаються! Створюйте Issue, якщо знаходите баги або хочете додати новий функціонал. 
