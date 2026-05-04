@@ -20,6 +20,7 @@ services:
       - "3016:3000"
     environment:
       - DB_PATH=/app/backend/data/karma.db
+      - BOT_TOKEN=DUMMY_TOKEN
     volumes:
       - ./data/kruhlyk:/app/backend/data
 
@@ -31,5 +32,6 @@ services:
       - "3017:3000"
     environment:
       - DB_PATH=/app/backend/data/karma.db
+      - BOT_TOKEN=DUMMY_TOKEN
     volumes:
       - ./data/predatel:/app/backend/data

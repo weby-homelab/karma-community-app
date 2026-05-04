@@ -10,10 +10,8 @@ RUN npm run build
 FROM node:22-alpine
 WORKDIR /app/backend
 COPY backend/package*.json ./
-# Install sqlite3 dependencies (python, make, g++ might be needed for node-sqlite3 on alpine)
-RUN apk add --no-cache python3 make g++ && \
-    npm install --production && \
-    apk del python3 make g++
+# Install production dependencies
+RUN npm install --production
 COPY backend/ ./
 # Copy built frontend to public directory
 COPY --from=frontend-builder /app/frontend/dist ./public
