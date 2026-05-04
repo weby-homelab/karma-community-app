@@ -1,0 +1,35 @@
+version: '3.8'
+
+services:
+  karma-winner:
+    image: webyhomelab/karma-community-app:latest
+    container_name: karma-winner
+    restart: unless-stopped
+    ports:
+      - "3015:3000"
+    environment:
+      - DB_PATH=/app/backend/data/karma.db
+    volumes:
+      - ./data/winner:/app/backend/data
+
+  karma-kruhlyk:
+    image: webyhomelab/karma-community-app:latest
+    container_name: karma-kruhlyk
+    restart: unless-stopped
+    ports:
+      - "3016:3000"
+    environment:
+      - DB_PATH=/app/backend/data/karma.db
+    volumes:
+      - ./data/kruhlyk:/app/backend/data
+
+  karma-predatel:
+    image: webyhomelab/karma-community-app:latest
+    container_name: karma-predatel
+    restart: unless-stopped
+    ports:
+      - "3017:3000"
+    environment:
+      - DB_PATH=/app/backend/data/karma.db
+    volumes:
+      - ./data/predatel:/app/backend/data

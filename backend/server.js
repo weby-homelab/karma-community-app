@@ -33,7 +33,9 @@ app.use(cors());
 // Apply the rate limiting middleware to API calls only, BEFORE body parser
 app.use('/api', apiLimiter);
 
+const path = require('path');
 app.use(express.json());
+app.use(express.static(path.join(__dirname, 'public')));
 
 const VALID_EMOJIS = ['🔥', '❤️', '👍', '👏', '🏆', '💯', '⚡'];
 
@@ -225,6 +227,11 @@ app.get('/api/user/:id', async (req, res) => {
     console.error('User profile error:', error);
     res.status(500).json({ error: 'Internal Server Error' });
   }
+});
+
+// Catch-all route for SPA
+app.get('*', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
 const PORT = process.env.PORT || 3015;
