@@ -1,7 +1,7 @@
 # Karma Community App 🏆 (Docker Edition)
 
 <p align="center">
-  <img src="Karma-community-App-5.png" width="400" alt="Karma Community App Screenshot" />
+  <img src="karma-community-app-dashboard.png" width="400" alt="Karma Community App Screenshot" />
 </p>
 
 Сучасний Telegram Mini App для гейміфікації спільноти. Ця версія оптимізована для роботи в **Docker**-середовищі, підтримує легке горизонтальне масштабування (multi-tenancy) та віддачу статичного React-застосунку прямо через вбудований Node.js сервер.
