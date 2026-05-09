@@ -52,12 +52,47 @@ app.get('/api/settings', async (req, res) => {
   }
 });
 
+app.get('/api/admin/status', async (req, res) => {
+  try {
+    const settings = await getSettings();
+    const isConfigured = !!(settings.admin_password || process.env.ADMIN_PASSWORD);
+    res.json({ isConfigured });
+  } catch (error) {
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
+});
+
+app.post('/api/admin/setup', async (req, res) => {
+  try {
+    const { password } = req.body;
+    if (!password || password.length < 4) {
+      return res.status(400).json({ error: 'Пароль надто короткий' });
+    }
+
+    const settings = await getSettings();
+    const isConfigured = !!(settings.admin_password || process.env.ADMIN_PASSWORD);
+    
+    if (isConfigured) {
+      return res.status(403).json({ error: 'Пароль вже встановлено' });
+    }
+
+    await updateSettings({ admin_password: password });
+    res.json({ success: true });
+  } catch (error) {
+    res.status(500).json({ error: 'Помилка сервера' });
+  }
+});
+
 app.post('/api/admin/login', async (req, res) => {
   try {
     const { password } = req.body;
     const settings = await getSettings();
-    const adminPassword = settings.admin_password || process.env.ADMIN_PASSWORD || '[REDACTED]';
+    const adminPassword = settings.admin_password || process.env.ADMIN_PASSWORD;
     
+    if (!adminPassword) {
+      return res.status(403).json({ error: 'Адмін-пароль не встановлено. Використовуйте сторінку налаштування.' });
+    }
+
     if (password === adminPassword) {
       res.json({ success: true });
     } else {
@@ -72,9 +107,9 @@ app.post('/api/admin/settings', async (req, res) => {
   try {
     const { password, newSettings } = req.body;
     const settings = await getSettings();
-    const adminPassword = settings.admin_password || process.env.ADMIN_PASSWORD || '[REDACTED]';
+    const adminPassword = settings.admin_password || process.env.ADMIN_PASSWORD;
     
-    if (password !== adminPassword) {
+    if (!adminPassword || password !== adminPassword) {
       return res.status(401).send('Невірний пароль');
     }
 
