@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.7.2] - 2026-05-09
+### Added
+- **Secure First-Run Setup**: New installations now prompt the user to create an admin password on their first visit to the `/admin` panel.
+### Fixed
+- **Security**: Removed the hardcoded default admin password (`[REDACTED]`), significantly improving out-of-the-box security for self-hosted instances.
+
 ## [0.7.1] - 2026-05-09
 ### Fixed
 - **Security Vulnerability**: Fixed a critical XSS vulnerability in the `ip-address` library by upgrading to version 10.1.1.
