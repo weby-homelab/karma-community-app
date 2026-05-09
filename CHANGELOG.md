@@ -2,6 +2,17 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.7.1] - 2026-05-09
+### Fixed
+- **Security Vulnerability**: Fixed a critical XSS vulnerability in the `ip-address` library by upgrading to version 10.1.1.
+- **Dependencies**: Updated `express-rate-limit` and other backend dependencies to ensure a secure and stable environment. Confirmed 0 vulnerabilities via `npm audit`.
+
+## [0.7.0] - 2026-05-09
+### Added
+- **Docker Edition**: Complete transition to a containerized architecture. The project now includes a optimized Dockerfile and a multi-tenant `docker-compose.yml` for easy scaling.
+- **Improved Deployment**: Simplified setup for multiple community instances on a single host.
+- **Documentation**: Updated README with architectural diagrams, Docker-first instructions, and new screenshots.
+
 ## [0.6.1] - 2026-05-03
 ### Fixed
 - **Frontend Empty State Bug**: Added a robust retry mechanism to the frontend. It now gracefully waits and reconnects if the backend is temporarily unavailable (e.g., during the automatic restart triggered by saving settings in the Admin panel), preventing the leaderboard from falsely showing as empty.
