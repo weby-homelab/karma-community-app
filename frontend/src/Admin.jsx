@@ -4,6 +4,7 @@ import './index.css';
 export default function Admin() {
   const [password, setPassword] = useState('');
   const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [isConfigured, setIsConfigured] = useState(true);
   const [activeTab, setActiveTab] = useState('settings');
   
   // Settings State
@@ -22,6 +23,49 @@ export default function Admin() {
   const [loading, setLoading] = useState(false);
 
   const apiUrl = import.meta.env.VITE_API_URL || '';
+
+  useEffect(() => {
+    checkStatus();
+  }, []);
+
+  const checkStatus = async () => {
+    try {
+      const res = await fetch(`${apiUrl}/api/admin/status`);
+      if (res.ok) {
+        const data = await res.json();
+        setIsConfigured(data.isConfigured);
+      }
+    } catch (err) {
+      console.error('Check status error:', err);
+    }
+  };
+
+  const handleSetup = async (e) => {
+    e.preventDefault();
+    setLoading(true);
+    setStatus('');
+    
+    try {
+      const res = await fetch(`${apiUrl}/api/admin/setup`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ password })
+      });
+      
+      if (res.ok) {
+        setIsConfigured(true);
+        setStatus('✅ Пароль встановлено! Тепер ви можете увійти.');
+        setPassword('');
+      } else {
+        const data = await res.json();
+        setStatus(`❌ Помилка: ${data.error}`);
+      }
+    } catch (err) {
+      setStatus(`❌ Помилка: ${err.message}`);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleLogin = async (e) => {
     e.preventDefault();
@@ -122,6 +166,32 @@ export default function Admin() {
   };
 
   if (!isLoggedIn) {
+    if (!isConfigured) {
+      return (
+        <>
+          <div className="glass-panel header">
+            <h1>🚀 Перше налаштування</h1>
+            <p>Встановіть пароль адміністратора для керування системою.</p>
+          </div>
+          <div className="glass-panel">
+            <form onSubmit={handleSetup} style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
+              <input 
+                type="password" 
+                placeholder="Встановіть новий пароль"
+                value={password} 
+                onChange={(e) => setPassword(e.target.value)} 
+                style={{ width: '100%', padding: '10px', borderRadius: '5px', border: '1px solid #444', background: '#222', color: '#fff' }}
+              />
+              <button type="submit" disabled={loading} style={{ padding: '12px', background: '#28a745', color: '#fff', border: 'none', borderRadius: '5px', cursor: 'pointer', fontWeight: 'bold' }}>
+                {loading ? 'Налаштування...' : 'Встановити пароль'}
+              </button>
+            </form>
+            {status && <div style={{ marginTop: '15px', color: status.startsWith('✅') ? '#77dd77' : '#ff6b6b' }}>{status}</div>}
+          </div>
+        </>
+      );
+    }
+
     return (
       <>
         <div className="glass-panel header">
@@ -141,7 +211,7 @@ export default function Admin() {
               {loading ? 'Перевірка...' : 'Увійти'}
             </button>
           </form>
-          {status && <div style={{ marginTop: '15px', color: '#ff6b6b' }}>{status}</div>}
+          {status && <div style={{ marginTop: '15px', color: status.startsWith('✅') ? '#77dd77' : '#ff6b6b' }}>{status}</div>}
         </div>
       </>
     );
