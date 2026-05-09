@@ -6,7 +6,7 @@ All notable changes to this project will be documented in this file.
 ### Added
 - **Secure First-Run Setup**: New installations now prompt the user to create an admin password on their first visit to the `/admin` panel.
 ### Fixed
-- **Security**: Removed the hardcoded default admin password (`[REDACTED]`), significantly improving out-of-the-box security for self-hosted instances.
+- **Security**: Removed the hardcoded default admin password, significantly improving out-of-the-box security for self-hosted instances.
 
 ## [0.7.1] - 2026-05-09
 ### Fixed
