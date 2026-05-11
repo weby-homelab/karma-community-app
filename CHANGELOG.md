@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.7.3] - 2026-05-11
+### Added
+- **Multi-Emoji Support**: Added support for 7 emoji reactions (🔥, ❤️, 👍, 👏, 🏆, 💯, ⚡️) when parsing Telegram chat history JSON.
+- **Visual Clarification**: Updated the dashboard to clarify that the 🔥 icon represents the sum of all supported emoji reactions.
+### Fixed
+- **Parsing**: Fixed emoji variation selector matching in the JSON importer to ensure all Telegram-exported emojis are counted correctly.
+
 ## [0.7.2] - 2026-05-09
 ### Added
 - **Secure First-Run Setup**: New installations now prompt the user to create an admin password on their first visit to the `/admin` panel.
