@@ -2,7 +2,7 @@ const fs = require('fs');
 const path = require('path');
 const { getDb } = require('./db');
 
-const VALID_EMOJIS = ['🔥', '❤️', '👍', '👏', '🏆', '💯', '⚡'];
+const VALID_EMOJIS = ['🔥', '❤️', '❤', '👍', '👏', '🏆', '💯', '⚡', '⚡️'];
 
 async function importData() {
   console.log('Loading result-5.json...');

@@ -41,7 +41,7 @@ async function startBot(token, webAppUrl, targetChatId) {
   });
 
   // Handle reactions
-  const VALID_EMOJIS = ['🔥', '❤️', '👍', '👏', '🏆', '💯', '⚡'];
+  const VALID_EMOJIS = ['🔥', '❤️', '❤', '👍', '👏', '🏆', '💯', '⚡', '⚡️'];
 
   bot.on('message_reaction', async (ctx) => {
     const reaction = ctx.messageReaction;

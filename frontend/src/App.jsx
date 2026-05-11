@@ -88,7 +88,7 @@ function App() {
     <>
       <div className="glass-panel header">
         <h1>{settings.site_title || '🏆 Рейтинг KRUHLYK Community'}</h1>
-        <p>Карма нараховується за реакції (🔥, ❤️) на ваші повідомлення.</p>
+        <p>Карма нараховується за реакції (🔥, ❤️, 👍, 👏, 🏆, 💯, ⚡️) на ваші повідомлення.<br/><small style={{opacity: 0.8}}><i>* Іконка 🔥 біля рахунку — це сумарний показник за всіма 7 типами емодзі.</i></small></p>
       </div>
 
       <div className="glass-panel">
