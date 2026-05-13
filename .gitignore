@@ -29,4 +29,5 @@ dist-ssr
 .env*.local
 
 # Database
-karma.dbresult-*.json
+karma.db
+result-*.json
