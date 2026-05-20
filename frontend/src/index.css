@@ -12,6 +12,7 @@
   --glass-blur: 12px;
   --accent-color: var(--tg-theme-button-color, #646cff);
   --accent-text: var(--tg-theme-button-text-color, #ffffff);
+  --bg-color-glass-panel: #000000;
 }
 
 @media (prefers-color-scheme: light) {
@@ -47,7 +48,7 @@ body {
 
 /* Glassmorphism Classes */
 div.glass-panel {
-  background: var(--glass-bg);
+  background: var(--bg-color-glass-panel);
   backdrop-filter: blur(var(--glass-blur));
   -webkit-backdrop-filter: blur(var(--glass-blur));
   border: 1px solid var(--glass-border);
