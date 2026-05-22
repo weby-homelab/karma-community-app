@@ -2,6 +2,15 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.7.4] - 2026-05-22
+### Added
+- **Premium Dark Redesign**: OLED-friendly dark background (`#0c0d12`), Inter font, subtle mesh gradients, and layered glassmorphism.
+- **Leaderboard Animations**: Staggered `fadeInUp` entrance animations for leaderboard items to improve perceived speed.
+- **UI Visual Polish**: Medal-styled rank badges, bottom bar with blur and safe-area inset, shimmer loader animation, and focus glow rings on admin input fields.
+### Fixed
+- **Glass Panel Styling**: Replaced semi-transparent glass background with solid OLED-black to fix contrast issues.
+- **Security Hardening**: Ignored Telegram history export (`result-*.json`) files in `.gitignore` and purged them from repository history to prevent accidental data leaks.
+
 ## [0.7.3] - 2026-05-11
 ### Added
 - **Multi-Emoji Support**: Added support for 7 emoji reactions (🔥, ❤️, 👍, 👏, 🏆, 💯, ⚡️) when parsing Telegram chat history JSON.
