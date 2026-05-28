@@ -97,7 +97,40 @@ function App() {
         ) : error ? (
           <div className="loader" style={{ color: '#ff6b6b' }}>{error}</div>
         ) : leaderboard.length === 0 ? (
-          <div className="loader">Рейтинг поки порожній. Залиште першу реакцію!</div>
+          <div className="onboarding-container">
+            <h2>👋 Ласкаво просимо до KRUHLYK Karma!</h2>
+            <p className="onboarding-intro">Ваша система оцінки активності чату ще не налаштована. Слідуйте цим простим крокам, щоб запустити її:</p>
+            
+            <div className="onboarding-steps">
+              <div className="onboarding-step">
+                <span className="step-num">1</span>
+                <div className="step-content">
+                  <h3>🤖 Додайте бота до чату</h3>
+                  <p>Запросіть вашого Telegram-бота в групу як адміністратора, щоб він міг реєструвати реакції на повідомлення.</p>
+                </div>
+              </div>
+              
+              <div className="onboarding-step">
+                <span className="step-num">2</span>
+                <div className="step-content">
+                  <h3>🔓 Вимкніть Group Privacy</h3>
+                  <p>Через <strong>@BotFather</strong> вимкніть налаштування <i>Group Privacy</i> та переконайтеся, що ввімкнено <i>message_reaction</i> у дозволених оновленнях.</p>
+                </div>
+              </div>
+              
+              <div className="onboarding-step">
+                <span className="step-num">3</span>
+                <div className="step-content">
+                  <h3>📥 Імпортуйте історію чату</h3>
+                  <p>Експортуйте історію чату з Telegram Desktop у форматі <strong>JSON</strong> та завантажте її в адмін-панелі для миттєвого заповнення рейтингу.</p>
+                </div>
+              </div>
+            </div>
+
+            <div className="onboarding-actions">
+              <a href="/admin" className="onboarding-btn">⚙️ Перейти до Адмінки</a>
+            </div>
+          </div>
         ) : (
           <>
             <div className="leaderboard-legend">

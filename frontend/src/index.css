@@ -460,3 +460,112 @@ button[type="submit"]:active:not(:disabled),
 .stat-item.skeptic {
   color: #ff5858;
 }
+
+/* ============================================
+   ONBOARDING SCREEN STYLES
+   ============================================ */
+.onboarding-container {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  padding: 0.5rem 0.25rem;
+  text-align: left;
+}
+
+.onboarding-container h2 {
+  font-size: 1.25rem;
+  font-weight: 800;
+  margin: 0;
+  background: linear-gradient(135deg, #a78bfa, #f472b6);
+  background-clip: text;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.onboarding-intro {
+  font-size: 0.85rem;
+  color: rgba(255, 255, 255, 0.7);
+  line-height: 1.5;
+  margin: 0;
+}
+
+.onboarding-steps {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  margin-top: 0.5rem;
+}
+
+.onboarding-step {
+  display: flex;
+  gap: 0.875rem;
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid rgba(255, 255, 255, 0.04);
+  padding: 0.875rem;
+  border-radius: var(--radius-md);
+  transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), background-color 0.2s;
+}
+
+.onboarding-step:hover {
+  transform: translateX(3px);
+  background: rgba(255, 255, 255, 0.04);
+  border-color: rgba(255, 255, 255, 0.08);
+}
+
+.step-num {
+  font-size: 0.95rem;
+  font-weight: 800;
+  width: 26px;
+  height: 26px;
+  background: var(--accent-primary);
+  color: var(--accent-text);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  box-shadow: 0 0 10px var(--accent-glow);
+}
+
+.step-content h3 {
+  font-size: 0.9rem;
+  font-weight: 700;
+  margin: 0 0 0.25rem;
+  color: rgba(255, 255, 255, 0.95);
+}
+
+.step-content p {
+  font-size: 0.78rem;
+  color: rgba(255, 255, 255, 0.55);
+  line-height: 1.45;
+  margin: 0;
+}
+
+.onboarding-actions {
+  display: flex;
+  justify-content: center;
+  margin-top: 0.75rem;
+}
+
+.onboarding-btn {
+  text-decoration: none;
+  font-family: inherit;
+  font-weight: 700;
+  font-size: 0.9rem;
+  padding: 10px 20px;
+  background: var(--accent-primary);
+  color: var(--accent-text);
+  border-radius: var(--radius-sm) !important;
+  box-shadow: 0 4px 12px rgba(124, 106, 255, 0.3);
+  transition: transform 0.15s, box-shadow 0.15s, filter 0.15s;
+}
+
+.onboarding-btn:hover {
+  transform: translateY(-1px);
+  filter: brightness(1.1);
+  box-shadow: 0 6px 16px rgba(124, 106, 255, 0.4);
+}
+
+.onboarding-btn:active {
+  transform: translateY(0);
+}
