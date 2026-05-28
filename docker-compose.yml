@@ -24,3 +24,15 @@ services:
       - BOT_TOKEN=DUMMY_TOKEN
     volumes:
       - ./data/symyrenka:/app/backend/data
+
+  karma-kruhlyk2:
+    image: webyhomelab/karma-community-app:latest
+    container_name: karma-kruhlyk2
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:3019:3000"
+    environment:
+      - DB_PATH=/app/backend/data/karma.db
+      - BOT_TOKEN=DUMMY_TOKEN
+    volumes:
+      - ./data/kruhlyk2:/app/backend/data
