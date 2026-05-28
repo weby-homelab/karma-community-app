@@ -569,3 +569,32 @@ button[type="submit"]:active:not(:disabled),
 .onboarding-btn:active {
   transform: translateY(0);
 }
+
+/* ============================================
+   FOOTER CREDITS STYLES
+   ============================================ */
+.footer-credits {
+  text-align: center;
+  margin-top: 1.5rem;
+  margin-bottom: 1.5rem;
+  font-size: 0.75rem;
+  color: rgba(255, 255, 255, 0.4);
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.footer-credits p {
+  margin: 0;
+}
+
+.footer-credits a {
+  color: rgba(255, 255, 255, 0.55);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  transition: color 0.2s;
+}
+
+.footer-credits a:hover {
+  color: var(--accent-primary);
+}
