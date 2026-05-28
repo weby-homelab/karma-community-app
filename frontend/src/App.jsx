@@ -88,7 +88,7 @@ function App() {
     <>
       <div className="glass-panel header">
         <h1>{settings.site_title || '🏆 Рейтинг KRUHLYK Community'}</h1>
-        <p>Карма нараховується за реакції (🔥, ❤️, 👍, 👏, 🏆, 💯, ⚡️) на ваші повідомлення.<br/><small style={{opacity: 0.8}}><i>* Іконка 🔥 біля рахунку — це сумарний показник за всіма 7 типами емодзі.</i></small></p>
+        <p>Рейтинг базується на реакціях, розділених за трьома головними категоріями: Флудер-Юмораст, Корисний Гуру та Скептик/Аналітик.<br/><small style={{opacity: 0.8}}><i>* Смужка біля імені відображає пропорцію сили кожної категорії.</i></small></p>
       </div>
 
       <div className="glass-panel">
@@ -97,37 +97,175 @@ function App() {
         ) : error ? (
           <div className="loader" style={{ color: '#ff6b6b' }}>{error}</div>
         ) : leaderboard.length === 0 ? (
-          <div className="loader">Рейтинг поки порожній. Залиште першу реакцію!</div>
-        ) : (
-          <div className="leaderboard">
-            {leaderboard.map((user, index) => (
-              <div className="leaderboard-item" key={user.id}>
-                <div className={`rank ${getRankClass(index)}`}>
-                  #{index + 1}
-                </div>
-                <div className="user-info">
-                  <span className="username">{user.first_name || user.username || 'Анонім'}</span>
-                </div>
-                <div className="karma-score">
-                  {user.karma} <span className="karma-icon">🔥</span>
+          <div className="onboarding-container">
+            <h2>👋 Ласкаво просимо до KRUHLYK Karma!</h2>
+            <p className="onboarding-intro">Ваша система оцінки активності чату ще не налаштована. Слідуйте цим простим крокам, щоб запустити її:</p>
+            
+            <div className="onboarding-steps">
+              <div className="onboarding-step">
+                <span className="step-num">1</span>
+                <div className="step-content">
+                  <h3>🤖 Додайте бота до чату</h3>
+                  <p>Запросіть вашого Telegram-бота в групу як адміністратора, щоб він міг реєструвати реакції на повідомлення.</p>
                 </div>
               </div>
-            ))}
+              
+              <div className="onboarding-step">
+                <span className="step-num">2</span>
+                <div className="step-content">
+                  <h3>🔓 Вимкніть Group Privacy</h3>
+                  <p>Через <strong>@BotFather</strong> вимкніть налаштування <i>Group Privacy</i> та переконайтеся, що ввімкнено <i>message_reaction</i> у дозволених оновленнях.</p>
+                </div>
+              </div>
+              
+              <div className="onboarding-step">
+                <span className="step-num">3</span>
+                <div className="step-content">
+                  <h3>📥 Імпортуйте історію чату</h3>
+                  <p>Експортуйте історію чату з Telegram Desktop у форматі <strong>JSON</strong> та завантажте її в адмін-панелі для миттєвого заповнення рейтингу.</p>
+                </div>
+              </div>
+            </div>
+
+            <div className="onboarding-actions">
+              <a href="/admin" className="onboarding-btn">⚙️ Перейти до Адмінки</a>
+            </div>
           </div>
+        ) : (
+          <>
+            <div className="leaderboard-legend">
+              <div className="legend-item">
+                <span className="legend-dot flooder"></span>
+                <span className="legend-label">🎭 Флудер (😁, 🤣, 🤪)</span>
+              </div>
+              <div className="legend-item">
+                <span className="legend-dot guru"></span>
+                <span className="legend-label">🛠 Гуру (🔥, 👍, 💯, 🤝, 🫡, ❤️, 👌, 😎)</span>
+              </div>
+              <div className="legend-item">
+                <span className="legend-dot skeptic"></span>
+                <span className="legend-label">🧐 Скептик (🤔, 👀, 🤷‍♂️, 🤯, 😱, 👎, 😢)</span>
+              </div>
+            </div>
+            <div className="leaderboard">
+              {leaderboard.map((user, index) => {
+                const flooder = user.karma_flooder || 0;
+                const guru = user.karma_guru || 0;
+                const skeptic = user.karma_skeptic || 0;
+                const total = user.karma || 0;
+                const sum = flooder + guru + skeptic;
+                const divisor = sum > 0 ? sum : 1;
+                const flooderPct = sum > 0 ? (flooder / divisor) * 100 : 0;
+                const guruPct = sum > 0 ? (guru / divisor) * 100 : 0;
+                const skepticPct = sum > 0 ? (skeptic / divisor) * 100 : 0;
+
+                return (
+                  <div className="leaderboard-item" key={user.id}>
+                    <div className={`rank ${getRankClass(index)}`}>
+                      #{index + 1}
+                    </div>
+                    <div className="user-info">
+                      <span className="username">{user.first_name || user.username || 'Анонім'}</span>
+                      <div className="karma-bar-container">
+                        {flooder > 0 && (
+                          <div 
+                            className="karma-bar-segment flooder" 
+                            style={{ width: `${flooderPct}%` }}
+                            title={`Флудер-Юмораст: ${flooder}`}
+                          />
+                        )}
+                        {guru > 0 && (
+                          <div 
+                            className="karma-bar-segment guru" 
+                            style={{ width: `${guruPct}%` }}
+                            title={`Корисний Гуру / Технічний Авторитет: ${guru}`}
+                          />
+                        )}
+                        {skeptic > 0 && (
+                          <div 
+                            className="karma-bar-segment skeptic" 
+                            style={{ width: `${skepticPct}%` }}
+                            title={`Скептик / Аналітик / Думер: ${skeptic}`}
+                          />
+                        )}
+                        {total === 0 && (
+                          <div 
+                            className="karma-bar-segment empty" 
+                            style={{ width: '100%', background: 'rgba(255,255,255,0.05)' }}
+                          />
+                        )}
+                      </div>
+                      <div className="karma-bar-stats">
+                        <span className="stat-item flooder">🎭 {flooder}</span>
+                        <span className="stat-item guru">🛠 {guru}</span>
+                        <span className="stat-item skeptic">🧐 {skeptic}</span>
+                      </div>
+                    </div>
+                    <div className="karma-score">
+                      {total} <span className="karma-icon">🔥</span>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </>
         )}
       </div>
 
-      {myProfile && (
-        <div className="glass-panel my-profile">
-          <div className="user-info">
-            <span className="username">Мій профіль ({myProfile.first_name})</span>
-            <span style={{ fontSize: '0.85rem', opacity: 0.8 }}>Позиція: #{myProfile.rank}</span>
+      {myProfile && (() => {
+        const flooder = myProfile.karma_flooder || 0;
+        const guru = myProfile.karma_guru || 0;
+        const skeptic = myProfile.karma_skeptic || 0;
+        const total = myProfile.karma || 0;
+        const sum = flooder + guru + skeptic;
+        const divisor = sum > 0 ? sum : 1;
+        const flooderPct = sum > 0 ? (flooder / divisor) * 100 : 0;
+        const guruPct = sum > 0 ? (guru / divisor) * 100 : 0;
+        const skepticPct = sum > 0 ? (skeptic / divisor) * 100 : 0;
+
+        return (
+          <div className="glass-panel my-profile">
+            <div className="user-info">
+              <span className="username">Мій профіль ({myProfile.first_name})</span>
+              <span style={{ fontSize: '0.85rem', opacity: 0.8 }}>Позиція: #{myProfile.rank}</span>
+              <div className="karma-bar-container">
+                {flooder > 0 && (
+                  <div 
+                    className="karma-bar-segment flooder" 
+                    style={{ width: `${flooderPct}%` }}
+                  />
+                )}
+                {guru > 0 && (
+                  <div 
+                    className="karma-bar-segment guru" 
+                    style={{ width: `${guruPct}%` }}
+                  />
+                )}
+                {skeptic > 0 && (
+                  <div 
+                    className="karma-bar-segment skeptic" 
+                    style={{ width: `${skepticPct}%` }}
+                  />
+                )}
+                {total === 0 && (
+                  <div 
+                    className="karma-bar-segment empty" 
+                    style={{ width: '100%', background: 'rgba(255,255,255,0.05)' }}
+                  />
+                )}
+              </div>
+              <div className="karma-bar-stats">
+                <span className="stat-item flooder">🎭 {flooder}</span>
+                <span className="stat-item guru">🛠 {guru}</span>
+                <span className="stat-item skeptic">🧐 {skeptic}</span>
+              </div>
+            </div>
+            <div className="karma-score">
+              {total} <span className="karma-icon">🔥</span>
+            </div>
           </div>
-          <div className="karma-score">
-            {myProfile.karma} <span className="karma-icon">🔥</span>
-          </div>
-        </div>
-      )}
+        );
+      })()}
     </>
   )
 }
