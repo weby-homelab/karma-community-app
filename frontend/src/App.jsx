@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { version } from '../package.json'
 import './index.css'
 
 function App() {
@@ -211,6 +212,15 @@ function App() {
           </>
         )}
       </div>
+
+      <footer className="footer-credits">
+        <p>
+          <a href="https://github.com/weby-homelab/karma-community-app" target="_blank" rel="noopener noreferrer">
+            Оновлено: 28.05.2026 17:57
+          </a>
+        </p>
+        <p>&copy; 2026 Weby Homelab &bull; v{version}</p>
+      </footer>
 
       {myProfile && (() => {
         const flooder = myProfile.karma_flooder || 0;
