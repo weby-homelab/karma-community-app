@@ -7,7 +7,7 @@ let dbPromise;
 async function getDb() {
   if (!dbPromise) {
     dbPromise = open({
-      filename: path.join(__dirname, 'karma.db'),
+      filename: process.env.DB_PATH || path.join(__dirname, 'karma.db'),
       driver: sqlite3.Database
     }).then(async (db) => {
       await db.exec(`
@@ -35,6 +35,18 @@ async function getDb() {
       } catch (e) {
         // Column likely already exists
       }
+      
+      try {
+        await db.exec('ALTER TABLE users ADD COLUMN karma_flooder INTEGER DEFAULT 0;');
+      } catch (e) {}
+      
+      try {
+        await db.exec('ALTER TABLE users ADD COLUMN karma_guru INTEGER DEFAULT 0;');
+      } catch (e) {}
+      
+      try {
+        await db.exec('ALTER TABLE users ADD COLUMN karma_skeptic INTEGER DEFAULT 0;');
+      } catch (e) {}
       
       return db;
     });

@@ -33,9 +33,14 @@ app.use(cors());
 // Apply the rate limiting middleware to API calls only, BEFORE body parser
 app.use('/api', apiLimiter);
 
+const path = require('path');
 app.use(express.json());
+app.use(express.static(path.join(__dirname, 'public')));
 
-const VALID_EMOJIS = ['🔥', '❤️', '👍', '👏', '🏆', '💯', '⚡'];
+const FLOODER_EMOJIS = ['😁', '🤣', '🤪'];
+const GURU_EMOJIS = ['🔥', '👍', '💯', '🤝', '🫡', '❤️', '❤', '❤️🔥', '👌', '😎'];
+const SKEPTIC_EMOJIS = ['🤔', '👀', '🤷‍♂️', '🤷\u200d♂️', '🤷', '🤯', '😱', '👎', '😢', '🙈', '🥴'];
+const VALID_EMOJIS = [...FLOODER_EMOJIS, ...GURU_EMOJIS, ...SKEPTIC_EMOJIS];
 
 app.get('/api/settings', async (req, res) => {
   try {
@@ -168,17 +173,40 @@ app.post('/api/admin/upload-json', upload.single('file'), async (req, res) => {
       const firstName = msg.from || 'Unknown';
       const msgDate = parseInt(msg.date_unixtime || '9999999999', 10);
       let karmaToAdd = 0;
+      let flooderToAdd = 0;
+      let guruToAdd = 0;
+      let skepticToAdd = 0;
       
       if (msg.reactions && Array.isArray(msg.reactions)) {
         for (const reaction of msg.reactions) {
-          if (reaction.type === 'emoji' && VALID_EMOJIS.includes(reaction.emoji)) {
-            karmaToAdd += reaction.count || 1;
+          if (reaction.type === 'emoji') {
+            const emoji = reaction.emoji;
+            const count = reaction.count || 1;
+            if (FLOODER_EMOJIS.includes(emoji)) {
+              flooderToAdd += count;
+              karmaToAdd += count;
+            } else if (GURU_EMOJIS.includes(emoji)) {
+              guruToAdd += count;
+              karmaToAdd += count;
+            } else if (SKEPTIC_EMOJIS.includes(emoji)) {
+              skepticToAdd += count;
+              karmaToAdd += count;
+            }
           }
         }
       }
       
       if (!userMap.has(userId)) {
-        userMap.set(userId, { id: userId, first_name: firstName, username: '', karma: 0, join_date: msgDate });
+        userMap.set(userId, { 
+          id: userId, 
+          first_name: firstName, 
+          username: '', 
+          karma: 0, 
+          karma_flooder: 0, 
+          karma_guru: 0, 
+          karma_skeptic: 0, 
+          join_date: msgDate 
+        });
       } else {
         const u = userMap.get(userId);
         if (msgDate < u.join_date) {
@@ -189,6 +217,9 @@ app.post('/api/admin/upload-json', upload.single('file'), async (req, res) => {
       if (karmaToAdd > 0) {
         const u = userMap.get(userId);
         u.karma += karmaToAdd;
+        u.karma_flooder += flooderToAdd;
+        u.karma_guru += guruToAdd;
+        u.karma_skeptic += skepticToAdd;
         u.first_name = firstName;
       }
     }
@@ -198,13 +229,19 @@ app.post('/api/admin/upload-json', upload.single('file'), async (req, res) => {
     
     await db.exec('BEGIN TRANSACTION');
     const stmt = await db.prepare(
-      `INSERT INTO users (id, username, first_name, karma, join_date) VALUES (?, ?, ?, ?, ?)
-       ON CONFLICT(id) DO UPDATE SET first_name=excluded.first_name, karma=users.karma + excluded.karma, join_date=MIN(users.join_date, excluded.join_date)`
+      `INSERT INTO users (id, username, first_name, karma, karma_flooder, karma_guru, karma_skeptic, join_date) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+       ON CONFLICT(id) DO UPDATE SET 
+         first_name=excluded.first_name, 
+         karma=users.karma + excluded.karma,
+         karma_flooder=users.karma_flooder + excluded.karma_flooder,
+         karma_guru=users.karma_guru + excluded.karma_guru,
+         karma_skeptic=users.karma_skeptic + excluded.karma_skeptic,
+         join_date=MIN(users.join_date, excluded.join_date)`
     );
     
     for (const u of userMap.values()) {
       // Insert all users, even those with 0 karma
-      await stmt.run([u.id, u.username, u.first_name, u.karma, u.join_date]);
+      await stmt.run([u.id, u.username, u.first_name, u.karma, u.karma_flooder, u.karma_guru, u.karma_skeptic, u.join_date]);
     }
     
     await stmt.finalize();
@@ -220,7 +257,7 @@ app.post('/api/admin/upload-json', upload.single('file'), async (req, res) => {
   app.get('/api/leaderboard', async (req, res) => {
   try {
     const db = await getDb();
-    const topUsers = await db.all('SELECT id, username, first_name, karma FROM users ORDER BY karma DESC, join_date ASC, id ASC LIMIT 50');
+    const topUsers = await db.all('SELECT id, username, first_name, karma, karma_flooder, karma_guru, karma_skeptic FROM users ORDER BY karma DESC, join_date ASC, id ASC LIMIT 50');
     res.json(topUsers);
   } catch (error) {
     console.error('Leaderboard error:', error);
@@ -234,15 +271,15 @@ app.get('/api/user/:id', async (req, res) => {
     const { username, first_name } = req.query;
     const db = await getDb();
     
-    let user = await db.get('SELECT id, username, first_name, karma, join_date FROM users WHERE id = ?', id);
+    let user = await db.get('SELECT id, username, first_name, karma, karma_flooder, karma_guru, karma_skeptic, join_date FROM users WHERE id = ?', id);
     
     // Auto-register if user not found and info is provided
     if (!user && first_name) {
       await db.run(
-        'INSERT INTO users (id, username, first_name, karma, join_date) VALUES (?, ?, ?, 0, ?)',
+        'INSERT INTO users (id, username, first_name, karma, karma_flooder, karma_guru, karma_skeptic, join_date) VALUES (?, ?, ?, 0, 0, 0, 0, ?)',
         [id, username || '', first_name, Math.floor(Date.now() / 1000)]
       );
-      user = { id: parseInt(id), username: username || '', first_name, karma: 0, join_date: Math.floor(Date.now() / 1000) };
+      user = { id: parseInt(id), username: username || '', first_name, karma: 0, karma_flooder: 0, karma_guru: 0, karma_skeptic: 0, join_date: Math.floor(Date.now() / 1000) };
     }
 
     if (!user) {
@@ -259,6 +296,15 @@ app.get('/api/user/:id', async (req, res) => {
   } catch (error) {
     console.error('User profile error:', error);
     res.status(500).json({ error: 'Internal Server Error' });
+  }
+});
+
+// Catch-all route for SPA
+app.use((req, res, next) => {
+  if (req.method === 'GET' && !req.path.startsWith('/api/')) {
+    res.sendFile(path.join(__dirname, 'public', 'index.html'));
+  } else {
+    next();
   }
 });
 
