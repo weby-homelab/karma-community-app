@@ -36,6 +36,18 @@ async function getDb() {
         // Column likely already exists
       }
       
+      try {
+        await db.exec('ALTER TABLE users ADD COLUMN karma_flooder INTEGER DEFAULT 0;');
+      } catch (e) {}
+      
+      try {
+        await db.exec('ALTER TABLE users ADD COLUMN karma_guru INTEGER DEFAULT 0;');
+      } catch (e) {}
+      
+      try {
+        await db.exec('ALTER TABLE users ADD COLUMN karma_skeptic INTEGER DEFAULT 0;');
+      } catch (e) {}
+      
       return db;
     });
   }

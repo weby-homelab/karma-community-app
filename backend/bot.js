@@ -41,7 +41,10 @@ async function startBot(token, webAppUrl, targetChatId) {
   });
 
   // Handle reactions
-  const VALID_EMOJIS = ['🔥', '❤️', '❤', '👍', '👏', '🏆', '💯', '⚡', '⚡️'];
+  const FLOODER_EMOJIS = ['😁', '🤣', '🤪'];
+  const GURU_EMOJIS = ['🔥', '👍', '💯', '🤝', '🫡', '❤️', '❤', '❤️🔥', '👌', '😎'];
+  const SKEPTIC_EMOJIS = ['🤔', '👀', '🤷‍♂️', '🤷\u200d♂️', '🤷', '🤯', '😱', '👎', '😢', '🙈', '🥴'];
+  const VALID_EMOJIS = [...FLOODER_EMOJIS, ...GURU_EMOJIS, ...SKEPTIC_EMOJIS];
 
   bot.on('message_reaction', async (ctx) => {
     const reaction = ctx.messageReaction;
@@ -74,9 +77,29 @@ async function startBot(token, webAppUrl, targetChatId) {
     
     let karmaDelta = added.length - removed.length;
     
-    if (karmaDelta !== 0) {
-      // Update user karma
-      await db.run('UPDATE users SET karma = MAX(0, karma + ?) WHERE id = ?', [karmaDelta, authorId]);
+    const flooderAdded = added.filter(e => FLOODER_EMOJIS.includes(e)).length;
+    const flooderRemoved = removed.filter(e => FLOODER_EMOJIS.includes(e)).length;
+    const flooderDelta = flooderAdded - flooderRemoved;
+
+    const guruAdded = added.filter(e => GURU_EMOJIS.includes(e)).length;
+    const guruRemoved = removed.filter(e => GURU_EMOJIS.includes(e)).length;
+    const guruDelta = guruAdded - guruRemoved;
+
+    const skepticAdded = added.filter(e => SKEPTIC_EMOJIS.includes(e)).length;
+    const skepticRemoved = removed.filter(e => SKEPTIC_EMOJIS.includes(e)).length;
+    const skepticDelta = skepticAdded - skepticRemoved;
+    
+    if (karmaDelta !== 0 || flooderDelta !== 0 || guruDelta !== 0 || skepticDelta !== 0) {
+      // Update user karma and categories
+      await db.run(
+        `UPDATE users SET 
+          karma = MAX(0, karma + ?),
+          karma_flooder = MAX(0, karma_flooder + ?),
+          karma_guru = MAX(0, karma_guru + ?),
+          karma_skeptic = MAX(0, karma_skeptic + ?)
+         WHERE id = ?`,
+        [karmaDelta, flooderDelta, guruDelta, skepticDelta, authorId]
+      );
     }
   });
 
