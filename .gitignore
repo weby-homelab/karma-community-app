@@ -31,3 +31,4 @@ dist-ssr
 # Database
 karma.db
 result-*.json
+result.json
