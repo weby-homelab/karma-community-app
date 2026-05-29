@@ -1,7 +1,7 @@
 # Karma Community App 🏆 (Docker Edition)
 
 <p align="center">
-  <img src="karma-community-app-dashboard-1.png" width="800" alt="Karma Community App Screenshot" />
+  <img src="karma-community-app!.png" width="800" alt="Karma Community App Screenshot" />
 </p>
 
 Сучасний Telegram Mini App для гейміфікації спільноти. Ця версія оптимізована для роботи в **Docker**-середовищі, підтримує легке горизонтальне масштабування (multi-tenancy) та віддачу статичного React-застосунку прямо через вбудований Node.js сервер.
@@ -90,7 +90,7 @@ graph TD
 ## ⚙️ Адмін-панель
 Налаштування додатка зручно здійснюється через вбудовану адмін-панель за адресою `/admin`.
 
-![Адмін-панель](karma-community-app-admin.png)
+![Адмін-панель](karma-community-app-admin-panel.png)
 
 **Доступні налаштування:**
 *   **Заголовок сайту:** (напр. *🏆 Рейтинг KRUHLYK Community*)
