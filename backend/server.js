@@ -45,9 +45,44 @@ const VALID_EMOJIS = [...FLOODER_EMOJIS, ...GURU_EMOJIS, ...SKEPTIC_EMOJIS];
 app.get('/api/settings', async (req, res) => {
   try {
     const settings = await getSettings();
+    let ownerInfo = null;
+    if (settings.chat_owner_id) {
+      const db = await getDb();
+      let cleanId = settings.chat_owner_id.toString().trim();
+      
+      // Strip 'user' or 'channel' prefix if present (common in Telegram export JSON)
+      if (cleanId.toLowerCase().startsWith('user')) {
+        cleanId = cleanId.substring(4).trim();
+      } else if (cleanId.toLowerCase().startsWith('channel')) {
+        cleanId = cleanId.substring(7).trim();
+      }
+      
+      if (!isNaN(cleanId) && cleanId.length > 0) {
+        // Find by numeric user ID
+        ownerInfo = await db.get(
+          'SELECT id, username, first_name, karma, karma_flooder, karma_guru, karma_skeptic FROM users WHERE id = ?',
+          [parseInt(cleanId, 10)]
+        );
+      }
+      
+      // Fallback: If not found by ID or if ID is not numeric, search by username or first_name
+      if (!ownerInfo) {
+        let searchName = settings.chat_owner_id.toString().trim();
+        if (searchName.startsWith('@')) {
+          searchName = searchName.substring(1);
+        }
+        ownerInfo = await db.get(
+          'SELECT id, username, first_name, karma, karma_flooder, karma_guru, karma_skeptic FROM users WHERE (username <> "" AND LOWER(username) = ?) OR LOWER(first_name) = ?',
+          [searchName.toLowerCase(), searchName.toLowerCase()]
+        );
+      }
+    }
     res.json({
       site_title: settings.site_title || '🏆 Рейтинг активності',
-      bot_name: settings.bot_name || ''
+      bot_name: settings.bot_name || '',
+      last_update: settings.last_update || '28.05.2026 17:57',
+      chat_owner_id: settings.chat_owner_id || '',
+      owner_info: ownerInfo
     });
   } catch (error) {
     console.error('Settings error:', error);
@@ -165,11 +200,18 @@ app.post('/api/admin/upload-json', upload.single('file'), async (req, res) => {
     const userMap = new Map();
 
     for (const msg of messages) {
-      if (!msg.from_id || typeof msg.from_id !== 'string' || !msg.from_id.startsWith('user')) {
+      if (!msg.from_id || typeof msg.from_id !== 'string') {
         continue;
       }
-      
-      const userId = parseInt(msg.from_id.replace('user', ''), 10);
+
+      let userId;
+      if (msg.from_id.startsWith('user')) {
+        userId = parseInt(msg.from_id.substring(4), 10);
+      } else if (msg.from_id.startsWith('channel')) {
+        userId = parseInt(msg.from_id.substring(7), 10);
+      } else {
+        continue;
+      }
       const firstName = msg.from || 'Unknown';
       const msgDate = parseInt(msg.date_unixtime || '9999999999', 10);
       let karmaToAdd = 0;
@@ -246,6 +288,20 @@ app.post('/api/admin/upload-json', upload.single('file'), async (req, res) => {
     
     await stmt.finalize();
     await db.exec('COMMIT');
+
+    // Update last_update setting after a successful import
+    const now = new Date();
+    const formatter = new Intl.DateTimeFormat('uk-UA', {
+      timeZone: 'Europe/Kyiv',
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: false
+    });
+    const formattedDate = formatter.format(now).replace(',', '').replace(/\s+/g, ' ').trim();
+    await updateSettings({ last_update: formattedDate });
 
     res.status(200).send('Успішно оновлено');
   } catch (error) {

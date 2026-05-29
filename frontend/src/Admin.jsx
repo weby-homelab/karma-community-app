@@ -12,6 +12,7 @@ export default function Admin() {
     site_title: '',
     bot_token: '',
     webapp_url: '',
+    chat_owner_id: '',
     admin_password: ''
   });
   
@@ -245,6 +246,10 @@ export default function Admin() {
             <div>
               <label style={{ display: 'block', marginBottom: '5px', fontSize: '0.9rem', color: '#ccc' }}>WebApp URL (для кнопки Start):</label>
               <input type="text" value={settings.webapp_url || ''} onChange={e => setSettings({...settings, webapp_url: e.target.value})} placeholder="https://kruhlyk.srvrs.top/" style={{ width: '100%', padding: '10px', borderRadius: '5px', border: '1px solid #444', background: '#222', color: '#fff' }} />
+            </div>
+            <div>
+              <label style={{ display: 'block', marginBottom: '5px', fontSize: '0.9rem', color: '#ccc' }}>Telegram ID власника чату (для відображення на почесному місці):</label>
+              <input type="text" value={settings.chat_owner_id || ''} onChange={e => setSettings({...settings, chat_owner_id: e.target.value})} placeholder="Наприклад: 123456789" style={{ width: '100%', padding: '10px', borderRadius: '5px', border: '1px solid #444', background: '#222', color: '#fff' }} />
             </div>
             <div>
               <label style={{ display: 'block', marginBottom: '5px', fontSize: '0.9rem', color: '#ccc' }}>Змінити пароль Адміна (залиште пустим, якщо не треба):</label>

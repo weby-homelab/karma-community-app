@@ -7,7 +7,7 @@ function App() {
   const [myProfile, setMyProfile] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [settings, setSettings] = useState({ site_title: '🏆 Рейтинг активності', bot_name: '' });
+  const [settings, setSettings] = useState({ site_title: '🏆 Рейтинг активності', bot_name: '', last_update: '28.05.2026 17:57', chat_owner_id: '', owner_info: null });
 
   useEffect(() => {
     // Expand Telegram Web App
@@ -148,8 +148,58 @@ function App() {
                 <span className="legend-label">🧐 Скептик (🤔, 👀, 🤷‍♂️, 🤯, 😱, 👎, 😢)</span>
               </div>
             </div>
+            {settings.owner_info && (
+              <div className="owner-card-container">
+                <div className="owner-card-title">👑 Власник чату</div>
+                <div className="leaderboard-item owner-item">
+                  <div className="rank rank-owner">
+                    👑
+                  </div>
+                  <div className="user-info">
+                    <span className="username">{settings.owner_info.first_name || settings.owner_info.username || 'Анонім'}</span>
+                    <div className="karma-bar-container">
+                      {(settings.owner_info.karma_flooder || 0) > 0 && (
+                        <div 
+                          className="karma-bar-segment flooder" 
+                          style={{ width: `${((settings.owner_info.karma_flooder || 0) / ((settings.owner_info.karma_flooder || 0) + (settings.owner_info.karma_guru || 0) + (settings.owner_info.karma_skeptic || 0) || 1)) * 100}%` }}
+                          title={`Флудер-Юмораст: ${settings.owner_info.karma_flooder || 0}`}
+                        />
+                      )}
+                      {(settings.owner_info.karma_guru || 0) > 0 && (
+                        <div 
+                          className="karma-bar-segment guru" 
+                          style={{ width: `${((settings.owner_info.karma_guru || 0) / ((settings.owner_info.karma_flooder || 0) + (settings.owner_info.karma_guru || 0) + (settings.owner_info.karma_skeptic || 0) || 1)) * 100}%` }}
+                          title={`Корисний Гуру / Технічний Авторитет: ${settings.owner_info.karma_guru || 0}`}
+                        />
+                      )}
+                      {(settings.owner_info.karma_skeptic || 0) > 0 && (
+                        <div 
+                          className="karma-bar-segment skeptic" 
+                          style={{ width: `${((settings.owner_info.karma_skeptic || 0) / ((settings.owner_info.karma_flooder || 0) + (settings.owner_info.karma_guru || 0) + (settings.owner_info.karma_skeptic || 0) || 1)) * 100}%` }}
+                          title={`Скептик / Аналітик / Думер: ${settings.owner_info.karma_skeptic || 0}`}
+                        />
+                      )}
+                      {(settings.owner_info.karma || 0) === 0 && (
+                        <div 
+                          className="karma-bar-segment empty" 
+                          style={{ width: '100%', background: 'rgba(255,255,255,0.05)' }}
+                        />
+                      )}
+                    </div>
+                    <div className="karma-bar-stats">
+                      <span className="stat-item flooder">🎭 {settings.owner_info.karma_flooder || 0}</span>
+                      <span className="stat-item guru">🛠 {settings.owner_info.karma_guru || 0}</span>
+                      <span className="stat-item skeptic">🧐 {settings.owner_info.karma_skeptic || 0}</span>
+                    </div>
+                  </div>
+                  <div className="karma-score">
+                    {settings.owner_info.karma || 0} <span className="karma-icon">🔥</span>
+                  </div>
+                </div>
+              </div>
+            )}
             <div className="leaderboard">
-              {leaderboard.map((user, index) => {
+              {leaderboard.filter(user => String(user.id) !== String(settings.chat_owner_id)).map((user, index) => {
                 const flooder = user.karma_flooder || 0;
                 const guru = user.karma_guru || 0;
                 const skeptic = user.karma_skeptic || 0;
@@ -216,7 +266,7 @@ function App() {
       <footer className="footer-credits">
         <p>
           <a href="https://github.com/weby-homelab/karma-community-app" target="_blank" rel="noopener noreferrer">
-            Оновлено: 28.05.2026 17:57
+            Оновлено: {settings.last_update}
           </a>
         </p>
         <p>&copy; 2026 Weby Homelab &bull; v{version}</p>
