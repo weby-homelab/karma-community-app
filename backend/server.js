@@ -46,12 +46,34 @@ app.get('/api/settings', async (req, res) => {
   try {
     const settings = await getSettings();
     let ownerInfo = null;
-    if (settings.chat_owner_id && !isNaN(settings.chat_owner_id)) {
+    if (settings.chat_owner_id) {
       const db = await getDb();
-      ownerInfo = await db.get(
-        'SELECT id, username, first_name, karma, karma_flooder, karma_guru, karma_skeptic FROM users WHERE id = ?',
-        [parseInt(settings.chat_owner_id, 10)]
-      );
+      let cleanId = settings.chat_owner_id.toString().trim();
+      
+      // Strip 'user' prefix if present (common in Telegram export JSON)
+      if (cleanId.toLowerCase().startsWith('user')) {
+        cleanId = cleanId.substring(4).trim();
+      }
+      
+      if (!isNaN(cleanId) && cleanId.length > 0) {
+        // Find by numeric user ID
+        ownerInfo = await db.get(
+          'SELECT id, username, first_name, karma, karma_flooder, karma_guru, karma_skeptic FROM users WHERE id = ?',
+          [parseInt(cleanId, 10)]
+        );
+      }
+      
+      // Fallback: If not found by ID or if ID is not numeric, search by username or first_name
+      if (!ownerInfo) {
+        let searchName = settings.chat_owner_id.toString().trim();
+        if (searchName.startsWith('@')) {
+          searchName = searchName.substring(1);
+        }
+        ownerInfo = await db.get(
+          'SELECT id, username, first_name, karma, karma_flooder, karma_guru, karma_skeptic FROM users WHERE (username <> "" AND LOWER(username) = ?) OR LOWER(first_name) = ?',
+          [searchName.toLowerCase(), searchName.toLowerCase()]
+        );
+      }
     }
     res.json({
       site_title: settings.site_title || '🏆 Рейтинг активності',
