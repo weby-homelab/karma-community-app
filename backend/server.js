@@ -47,7 +47,8 @@ app.get('/api/settings', async (req, res) => {
     const settings = await getSettings();
     res.json({
       site_title: settings.site_title || '🏆 Рейтинг активності',
-      bot_name: settings.bot_name || ''
+      bot_name: settings.bot_name || '',
+      last_update: settings.last_update || '28.05.2026 17:57'
     });
   } catch (error) {
     console.error('Settings error:', error);
@@ -246,6 +247,20 @@ app.post('/api/admin/upload-json', upload.single('file'), async (req, res) => {
     
     await stmt.finalize();
     await db.exec('COMMIT');
+
+    // Update last_update setting after a successful import
+    const now = new Date();
+    const formatter = new Intl.DateTimeFormat('uk-UA', {
+      timeZone: 'Europe/Kyiv',
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: false
+    });
+    const formattedDate = formatter.format(now).replace(',', '').replace(/\s+/g, ' ').trim();
+    await updateSettings({ last_update: formattedDate });
 
     res.status(200).send('Успішно оновлено');
   } catch (error) {
