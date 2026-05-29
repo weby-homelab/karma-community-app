@@ -45,10 +45,20 @@ const VALID_EMOJIS = [...FLOODER_EMOJIS, ...GURU_EMOJIS, ...SKEPTIC_EMOJIS];
 app.get('/api/settings', async (req, res) => {
   try {
     const settings = await getSettings();
+    let ownerInfo = null;
+    if (settings.chat_owner_id && !isNaN(settings.chat_owner_id)) {
+      const db = await getDb();
+      ownerInfo = await db.get(
+        'SELECT id, username, first_name, karma, karma_flooder, karma_guru, karma_skeptic FROM users WHERE id = ?',
+        [parseInt(settings.chat_owner_id, 10)]
+      );
+    }
     res.json({
       site_title: settings.site_title || '🏆 Рейтинг активності',
       bot_name: settings.bot_name || '',
-      last_update: settings.last_update || '28.05.2026 17:57'
+      last_update: settings.last_update || '28.05.2026 17:57',
+      chat_owner_id: settings.chat_owner_id || '',
+      owner_info: ownerInfo
     });
   } catch (error) {
     console.error('Settings error:', error);
