@@ -25,11 +25,18 @@ async function importData() {
   const userMap = new Map(); // id -> { username, first_name, karma }
 
   for (const msg of messages) {
-    if (!msg.from_id || typeof msg.from_id !== 'string' || !msg.from_id.startsWith('user')) {
+    if (!msg.from_id || typeof msg.from_id !== 'string') {
       continue;
     }
     
-    const userId = parseInt(msg.from_id.replace('user', ''), 10);
+    let userId;
+    if (msg.from_id.startsWith('user')) {
+      userId = parseInt(msg.from_id.substring(4), 10);
+    } else if (msg.from_id.startsWith('channel')) {
+      userId = parseInt(msg.from_id.substring(7), 10);
+    } else {
+      continue;
+    }
     const firstName = msg.from || 'Unknown';
     let karmaToAdd = 0;
     
