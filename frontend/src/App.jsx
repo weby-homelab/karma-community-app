@@ -7,7 +7,7 @@ function App() {
   const [myProfile, setMyProfile] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [settings, setSettings] = useState({ site_title: '🏆 Рейтинг активності', bot_name: '' });
+  const [settings, setSettings] = useState({ site_title: '🏆 Рейтинг активності', bot_name: '', last_update: '28.05.2026 17:57' });
 
   useEffect(() => {
     // Expand Telegram Web App
@@ -216,7 +216,7 @@ function App() {
       <footer className="footer-credits">
         <p>
           <a href="https://github.com/weby-homelab/karma-community-app" target="_blank" rel="noopener noreferrer">
-            Оновлено: 28.05.2026 17:57
+            Оновлено: {settings.last_update}
           </a>
         </p>
         <p>&copy; 2026 Weby Homelab &bull; v{version}</p>
