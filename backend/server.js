@@ -50,9 +50,11 @@ app.get('/api/settings', async (req, res) => {
       const db = await getDb();
       let cleanId = settings.chat_owner_id.toString().trim();
       
-      // Strip 'user' prefix if present (common in Telegram export JSON)
+      // Strip 'user' or 'channel' prefix if present (common in Telegram export JSON)
       if (cleanId.toLowerCase().startsWith('user')) {
         cleanId = cleanId.substring(4).trim();
+      } else if (cleanId.toLowerCase().startsWith('channel')) {
+        cleanId = cleanId.substring(7).trim();
       }
       
       if (!isNaN(cleanId) && cleanId.length > 0) {
@@ -198,11 +200,18 @@ app.post('/api/admin/upload-json', upload.single('file'), async (req, res) => {
     const userMap = new Map();
 
     for (const msg of messages) {
-      if (!msg.from_id || typeof msg.from_id !== 'string' || !msg.from_id.startsWith('user')) {
+      if (!msg.from_id || typeof msg.from_id !== 'string') {
         continue;
       }
-      
-      const userId = parseInt(msg.from_id.replace('user', ''), 10);
+
+      let userId;
+      if (msg.from_id.startsWith('user')) {
+        userId = parseInt(msg.from_id.substring(4), 10);
+      } else if (msg.from_id.startsWith('channel')) {
+        userId = parseInt(msg.from_id.substring(7), 10);
+      } else {
+        continue;
+      }
       const firstName = msg.from || 'Unknown';
       const msgDate = parseInt(msg.date_unixtime || '9999999999', 10);
       let karmaToAdd = 0;
