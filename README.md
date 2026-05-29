@@ -1,7 +1,7 @@
 # Karma Community App 🏆 (BARE METAL Edition)
 
 <p align="center">
-  <img src="karma-community-app-dashboard-1.png" width="800" alt="Karma Community App Screenshot" />
+  <img src="karma-community-app!.png" width="800" alt="Karma Community App Screenshot" />
 </p>
 
 Сучасний Telegram Mini App для гейміфікації спільноти. Оцінка активності базується на реакціях, розділених за трьома психологічними лінзами (Флудер-Юмораст, Корисний Гуру та Скептик/Аналітик) з візуалізацією у вигляді кольорових лінійних діаграм (stacked bar charts) та легендою рейтингу. Ця версія оптимізована для класичного запуску на "голому залізі" (bare-metal) без Docker.
@@ -119,7 +119,7 @@ graph TD
 ## ⚙️ Адмін-панель
 Налаштування додатка зручно здійснюється через вбудовану адмін-панель за адресою `/admin`.
 
-![Адмін-панель](karma-community-app-admin.png)
+![Адмін-панель](karma-community-app-admin-panel.png)
 
 **Доступні налаштування:**
 *   **Заголовок сайту:** 🏆 Рейтинг KRUHLYK Community
