@@ -1,18 +1,6 @@
 version: '3.8'
 
 services:
-  karma-kruhlyk:
-    image: webyhomelab/karma-community-app:latest
-    container_name: karma-kruhlyk
-    restart: unless-stopped
-    ports:
-      - "127.0.0.1:3016:3000"
-    environment:
-      - DB_PATH=/app/backend/data/karma.db
-      - BOT_TOKEN=DUMMY_TOKEN
-    volumes:
-      - ./data/kruhlyk:/app/backend/data
-
   karma-symyrenka:
     image: webyhomelab/karma-community-app:latest
     container_name: karma-symyrenka
