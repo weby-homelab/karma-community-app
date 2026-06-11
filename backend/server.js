@@ -35,7 +35,10 @@ app.use('/api', apiLimiter);
 
 const path = require('path');
 app.use(express.json());
-app.use(express.static(path.join(__dirname, 'public')));
+app.get('/index.html', (req, res) => {
+  res.redirect(301, '/');
+});
+app.use(express.static(path.join(__dirname, 'public'), { index: false }));
 
 const FLOODER_EMOJIS = ['😁', '🤣', '🤪'];
 const GURU_EMOJIS = ['🔥', '👍', '💯', '🤝', '🫡', '❤️', '❤', '❤️🔥', '👌', '😎'];
@@ -355,10 +358,56 @@ app.get('/api/user/:id', async (req, res) => {
   }
 });
 
-// Catch-all route for SPA
-app.use((req, res, next) => {
+// Catch-all route for SPA with dynamic SEO injection
+const fs = require('fs');
+app.use(async (req, res, next) => {
   if (req.method === 'GET' && !req.path.startsWith('/api/')) {
-    res.sendFile(path.join(__dirname, 'public', 'index.html'));
+    try {
+      const { getSettings } = require('./settings');
+      const settings = await getSettings();
+      const indexPath = path.join(__dirname, 'public', 'index.html');
+      
+      if (fs.existsSync(indexPath)) {
+        let html = fs.readFileSync(indexPath, 'utf8');
+        
+        const siteTitle = settings.site_title || '🏆 Рейтинг активності спільноти';
+        const seoDesc = settings.seo_description || 'Офіційний рейтинг активності учасників спільноти. Отримуйте карму за реакції!';
+        const ogImage = settings.seo_image || '/og-image.png';
+        const webappUrl = settings.webapp_url || '';
+        
+        // Dynamic HTML replacements for SEO
+        html = html.replace(/<title>.*?<\/title>/g, `<title>${siteTitle}</title>`);
+        html = html.replace(/<meta name="description" content=".*?" \/>/g, `<meta name="description" content="${seoDesc}" />`);
+        
+        html = html.replace(/<meta property="og:title" content=".*?" \/>/g, `<meta property="og:title" content="${siteTitle}" />`);
+        html = html.replace(/<meta property="og:description" content=".*?" \/>/g, `<meta property="og:description" content="${seoDesc}" />`);
+        html = html.replace(/<meta property="og:image" content=".*?" \/>/g, `<meta property="og:image" content="${ogImage}" />`);
+        
+        html = html.replace(/<meta name="twitter:title" content=".*?" \/>/g, `<meta name="twitter:title" content="${siteTitle}" />`);
+        html = html.replace(/<meta name="twitter:description" content=".*?" \/>/g, `<meta name="twitter:description" content="${seoDesc}" />`);
+        html = html.replace(/<meta name="twitter:image" content=".*?" \/>/g, `<meta name="twitter:image" content="${ogImage}" />`);
+        
+        let extraMeta = '';
+        if (webappUrl) {
+          extraMeta += `  <meta property="og:url" content="${webappUrl}" />\n`;
+          extraMeta += `  <link rel="canonical" href="${webappUrl}" />\n`;
+        }
+        if (settings.telegram_channel_url) {
+          extraMeta += `  <meta property="og:see_also" content="${settings.telegram_channel_url}" />\n`;
+        }
+        
+        if (extraMeta) {
+          html = html.replace(/<\/head>/, `${extraMeta}</head>`);
+        }
+        
+        res.send(html);
+      } else {
+        res.sendFile(indexPath);
+      }
+    } catch (err) {
+      console.error('SEO middleware error:', err);
+      res.sendFile(path.join(__dirname, 'public', 'index.html'));
+    }
   } else {
     next();
   }
