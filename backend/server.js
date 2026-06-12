@@ -357,6 +357,16 @@ app.get('/api/user/:id', async (req, res) => {
   }
 });
 
+function escapeHtml(text) {
+  if (typeof text !== 'string') return '';
+  return text
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;');
+}
+
 // Catch-all route for SPA with dynamic SEO injection
 const fs = require('fs');
 app.use(async (req, res, next) => {
@@ -369,10 +379,11 @@ app.use(async (req, res, next) => {
       if (fs.existsSync(indexPath)) {
         let html = fs.readFileSync(indexPath, 'utf8');
         
-        const siteTitle = settings.site_title || '🏆 Рейтинг активності спільноти';
-        const seoDesc = settings.seo_description || 'Офіційний рейтинг активності учасників спільноти. Отримуйте карму за реакції!';
-        const ogImage = settings.seo_image || '/og-image.png';
-        const webappUrl = settings.webapp_url || '';
+        const siteTitle = escapeHtml(settings.site_title || '🏆 Рейтинг активності спільноти');
+        const seoDesc = escapeHtml(settings.seo_description || 'Офіційний рейтинг активності учасників спільноти. Отримуйте карму за реакції!');
+        const ogImage = escapeHtml(settings.seo_image || '/og-image.png');
+        const webappUrl = escapeHtml(settings.webapp_url || '');
+        const channelUrl = escapeHtml(settings.telegram_channel_url || '');
         
         // Dynamic HTML replacements for SEO
         html = html.replace(/<title>.*?<\/title>/g, `<title>${siteTitle}</title>`);
@@ -391,8 +402,8 @@ app.use(async (req, res, next) => {
           extraMeta += `  <meta property="og:url" content="${webappUrl}" />\n`;
           extraMeta += `  <link rel="canonical" href="${webappUrl}" />\n`;
         }
-        if (settings.telegram_channel_url) {
-          extraMeta += `  <meta property="og:see_also" content="${settings.telegram_channel_url}" />\n`;
+        if (channelUrl) {
+          extraMeta += `  <meta property="og:see_also" content="${channelUrl}" />\n`;
         }
         
         if (extraMeta) {
