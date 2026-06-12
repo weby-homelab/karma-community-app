@@ -96,7 +96,7 @@ function App() {
         {loading ? (
           <div className="loader">Завантаження рейтингу...</div>
         ) : error ? (
-          <div className="loader" style={{ color: '#ff6b6b' }}>{error}</div>
+          <div className="loader error-text">{error}</div>
         ) : leaderboard.length === 0 ? (
           <div className="onboarding-container">
             <h2>👋 Ласкаво просимо до KRUHLYK Karma!</h2>
@@ -182,7 +182,7 @@ function App() {
                       {(settings.owner_info.karma || 0) === 0 && (
                         <div 
                           className="karma-bar-segment empty" 
-                          style={{ width: '100%', background: 'rgba(255,255,255,0.05)' }}
+                          style={{ width: '100%' }}
                         />
                       )}
                     </div>
@@ -242,7 +242,7 @@ function App() {
                         {total === 0 && (
                           <div 
                             className="karma-bar-segment empty" 
-                            style={{ width: '100%', background: 'rgba(255,255,255,0.05)' }}
+                            style={{ width: '100%' }}
                           />
                         )}
                       </div>
@@ -310,7 +310,7 @@ function App() {
                 {total === 0 && (
                   <div 
                     className="karma-bar-segment empty" 
-                    style={{ width: '100%', background: 'rgba(255,255,255,0.05)' }}
+                    style={{ width: '100%' }}
                   />
                 )}
               </div>
