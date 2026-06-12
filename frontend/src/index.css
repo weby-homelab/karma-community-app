@@ -240,7 +240,7 @@ div.glass-panel {
 }
 
 /* --- Bottom Profile Bar --- */
-.my-profile {
+div.glass-panel.my-profile {
   position: fixed;
   bottom: 0;
   left: 0;
@@ -253,11 +253,13 @@ div.glass-panel {
   align-items: center;
   padding: 0.875rem 1.25rem;
   padding-bottom: calc(0.875rem + env(safe-area-inset-bottom, 0px));
-  background: var(--bg-base);
-  backdrop-filter: blur(24px) saturate(1.4);
-  -webkit-backdrop-filter: blur(24px) saturate(1.4);
-  border-top: 1px solid rgba(255, 255, 255, 0.06);
-  border-radius: 0;
+  background: #0c0d12 !important; /* Fallback */
+  background: var(--bg-base) !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  border: none !important;
+  border-top: 1px solid rgba(255, 255, 255, 0.06) !important;
+  border-radius: 0 !important;
   animation: slideUp 0.5s cubic-bezier(0.16, 1, 0.3, 1) 0.3s backwards;
 }
 
