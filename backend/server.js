@@ -169,9 +169,9 @@ app.post('/api/admin/settings/view', async (req, res) => {
   try {
     const { password } = req.body;
     const settings = await getSettings();
-    const adminPassword = settings.admin_password || process.env.ADMIN_PASSWORD || '[REDACTED]';
+    const adminPassword = settings.admin_password || process.env.ADMIN_PASSWORD;
     
-    if (password !== adminPassword) {
+    if (!adminPassword || password !== adminPassword) {
       return res.status(401).send('Невірний пароль');
     }
 
@@ -186,9 +186,9 @@ app.post('/api/admin/upload-json', upload.single('file'), async (req, res) => {
   try {
     const password = req.body.password;
     const settings = await getSettings();
-    const adminPassword = settings.admin_password || process.env.ADMIN_PASSWORD || '[REDACTED]';
+    const adminPassword = settings.admin_password || process.env.ADMIN_PASSWORD;
     
-    if (password !== adminPassword) {
+    if (!adminPassword || password !== adminPassword) {
       return res.status(401).send('Невірний пароль');
     }
 
@@ -269,10 +269,9 @@ app.post('/api/admin/upload-json', upload.single('file'), async (req, res) => {
       }
     }
     
+    await db.exec('BEGIN TRANSACTION');
     await db.exec('DELETE FROM users;');
     await db.exec('DELETE FROM messages;');
-    
-    await db.exec('BEGIN TRANSACTION');
     const stmt = await db.prepare(
       `INSERT INTO users (id, username, first_name, karma, karma_flooder, karma_guru, karma_skeptic, join_date) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
        ON CONFLICT(id) DO UPDATE SET 
@@ -361,7 +360,7 @@ app.get('/api/user/:id', async (req, res) => {
 // Catch-all route for SPA with dynamic SEO injection
 const fs = require('fs');
 app.use(async (req, res, next) => {
-  if (req.method === 'GET' && !req.path.startsWith('/api/')) {
+  if ((req.method === 'GET' || req.method === 'HEAD') && !req.path.startsWith('/api/')) {
     try {
       const { getSettings } = require('./settings');
       const settings = await getSettings();
@@ -377,15 +376,15 @@ app.use(async (req, res, next) => {
         
         // Dynamic HTML replacements for SEO
         html = html.replace(/<title>.*?<\/title>/g, `<title>${siteTitle}</title>`);
-        html = html.replace(/<meta name="description" content=".*?" \/>/g, `<meta name="description" content="${seoDesc}" />`);
+        html = html.replace(/<meta name="description" content=".*?"\s*\/?>/g, `<meta name="description" content="${seoDesc}" />`);
         
-        html = html.replace(/<meta property="og:title" content=".*?" \/>/g, `<meta property="og:title" content="${siteTitle}" />`);
-        html = html.replace(/<meta property="og:description" content=".*?" \/>/g, `<meta property="og:description" content="${seoDesc}" />`);
-        html = html.replace(/<meta property="og:image" content=".*?" \/>/g, `<meta property="og:image" content="${ogImage}" />`);
+        html = html.replace(/<meta property="og:title" content=".*?"\s*\/?>/g, `<meta property="og:title" content="${siteTitle}" />`);
+        html = html.replace(/<meta property="og:description" content=".*?"\s*\/?>/g, `<meta property="og:description" content="${seoDesc}" />`);
+        html = html.replace(/<meta property="og:image" content=".*?"\s*\/?>/g, `<meta property="og:image" content="${ogImage}" />`);
         
-        html = html.replace(/<meta name="twitter:title" content=".*?" \/>/g, `<meta name="twitter:title" content="${siteTitle}" />`);
-        html = html.replace(/<meta name="twitter:description" content=".*?" \/>/g, `<meta name="twitter:description" content="${seoDesc}" />`);
-        html = html.replace(/<meta name="twitter:image" content=".*?" \/>/g, `<meta name="twitter:image" content="${ogImage}" />`);
+        html = html.replace(/<meta name="twitter:title" content=".*?"\s*\/?>/g, `<meta name="twitter:title" content="${siteTitle}" />`);
+        html = html.replace(/<meta name="twitter:description" content=".*?"\s*\/?>/g, `<meta name="twitter:description" content="${seoDesc}" />`);
+        html = html.replace(/<meta name="twitter:image" content=".*?"\s*\/?>/g, `<meta name="twitter:image" content="${ogImage}" />`);
         
         let extraMeta = '';
         if (webappUrl) {

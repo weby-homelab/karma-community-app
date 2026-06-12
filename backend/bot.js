@@ -116,7 +116,10 @@ async function registerUser(db, user) {
   if (!user || user.is_bot) return;
   await db.run(
     `INSERT INTO users (id, username, first_name, join_date) VALUES (?, ?, ?, ?)
-     ON CONFLICT(id) DO UPDATE SET username=excluded.username, first_name=excluded.first_name`,
+     ON CONFLICT(id) DO UPDATE SET 
+       username=excluded.username, 
+       first_name=excluded.first_name,
+       join_date=MIN(users.join_date, excluded.join_date)`,
     [user.id, user.username, user.first_name, Math.floor(Date.now() / 1000)]
   );
 }
