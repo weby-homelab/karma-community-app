@@ -8,7 +8,19 @@ const { getSettings, updateSettings } = require('./settings');
 const { startBot } = require('./bot');
 
 const app = express();
-const upload = multer({ storage: multer.memoryStorage() });
+const upload = multer({
+  storage: multer.memoryStorage(),
+  limits: { fileSize: 50 * 1024 * 1024 } // Limit file size to 50MB
+});
+
+const crypto = require('crypto');
+function safeCompare(a, b) {
+  if (typeof a !== 'string' || typeof b !== 'string') return false;
+  const aHash = crypto.createHash('sha256').update(a).digest();
+  const bHash = crypto.createHash('sha256').update(b).digest();
+  return crypto.timingSafeEqual(aHash, bHash);
+}
+
 
 // Enable if you're behind a reverse proxy (Heroku, Bluemix, AWS ELB, Nginx, etc)
 // see https://expressjs.com/en/guide/behind-proxies.html
@@ -39,6 +51,16 @@ app.get('/index.html', (req, res) => {
   res.redirect(301, '/');
 });
 app.use(express.static(path.join(__dirname, 'public'), { index: false }));
+
+app.use((err, req, res, next) => {
+  if (err instanceof multer.MulterError) {
+    if (err.code === 'LIMIT_FILE_SIZE') {
+      return res.status(400).json({ error: 'Файл надто великий. Максимальний розмір: 50MB' });
+    }
+  }
+  next(err);
+});
+
 
 const FLOODER_EMOJIS = ['😁', '🤣', '🤪'];
 const GURU_EMOJIS = ['🔥', '👍', '💯', '🤝', '🫡', '❤️', '❤', '❤️🔥', '👌', '😎'];
@@ -134,7 +156,7 @@ app.post('/api/admin/login', async (req, res) => {
       return res.status(403).json({ error: 'Адмін-пароль не встановлено. Використовуйте сторінку налаштування.' });
     }
 
-    if (password === adminPassword) {
+    if (safeCompare(password, adminPassword)) {
       res.json({ success: true });
     } else {
       res.status(401).json({ error: 'Невірний пароль' });
@@ -150,7 +172,7 @@ app.post('/api/admin/settings', async (req, res) => {
     const settings = await getSettings();
     const adminPassword = settings.admin_password || process.env.ADMIN_PASSWORD;
     
-    if (!adminPassword || password !== adminPassword) {
+    if (!adminPassword || !safeCompare(password, adminPassword)) {
       return res.status(401).send('Невірний пароль');
     }
 
@@ -171,7 +193,7 @@ app.post('/api/admin/settings/view', async (req, res) => {
     const settings = await getSettings();
     const adminPassword = settings.admin_password || process.env.ADMIN_PASSWORD;
     
-    if (!adminPassword || password !== adminPassword) {
+    if (!adminPassword || !safeCompare(password, adminPassword)) {
       return res.status(401).send('Невірний пароль');
     }
 
@@ -188,7 +210,7 @@ app.post('/api/admin/upload-json', upload.single('file'), async (req, res) => {
     const settings = await getSettings();
     const adminPassword = settings.admin_password || process.env.ADMIN_PASSWORD;
     
-    if (!adminPassword || password !== adminPassword) {
+    if (!adminPassword || !safeCompare(password, adminPassword)) {
       return res.status(401).send('Невірний пароль');
     }
 

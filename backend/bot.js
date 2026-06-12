@@ -28,6 +28,7 @@ async function startBot(token, webAppUrl, targetChatId) {
 
   // Track messages
   bot.on('message', async (ctx) => {
+    if (!ctx.from) return;
     const db = await getDb();
     await registerUser(db, ctx.from);
     
