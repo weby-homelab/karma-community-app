@@ -181,13 +181,12 @@ export default function Admin() {
                 placeholder="Встановіть новий пароль"
                 value={password} 
                 onChange={(e) => setPassword(e.target.value)} 
-                style={{ width: '100%', padding: '10px', borderRadius: '5px', border: '1px solid #444', background: '#222', color: '#fff' }}
               />
               <button type="submit" disabled={loading} style={{ padding: '12px', background: '#28a745', color: '#fff', border: 'none', borderRadius: '5px', cursor: 'pointer', fontWeight: 'bold' }}>
                 {loading ? 'Налаштування...' : 'Встановити пароль'}
               </button>
             </form>
-            {status && <div style={{ marginTop: '15px', color: status.startsWith('✅') ? '#77dd77' : '#ff6b6b' }}>{status}</div>}
+            {status && <div className={`status-message ${status.startsWith('✅') ? 'success' : 'error'}`}>{status}</div>}
           </div>
         </>
       );
@@ -206,13 +205,12 @@ export default function Admin() {
               placeholder="Пароль"
               value={password} 
               onChange={(e) => setPassword(e.target.value)} 
-              style={{ width: '100%', padding: '10px', borderRadius: '5px', border: '1px solid #444', background: '#222', color: '#fff' }}
             />
             <button type="submit" disabled={loading} style={{ padding: '12px', background: '#0088cc', color: '#fff', border: 'none', borderRadius: '5px', cursor: 'pointer' }}>
               {loading ? 'Перевірка...' : 'Увійти'}
             </button>
           </form>
-          {status && <div style={{ marginTop: '15px', color: status.startsWith('✅') ? '#77dd77' : '#ff6b6b' }}>{status}</div>}
+          {status && <div className={`status-message ${status.startsWith('✅') ? 'success' : 'error'}`}>{status}</div>}
         </div>
       </>
     );
@@ -232,28 +230,28 @@ export default function Admin() {
         {activeTab === 'settings' ? (
           <form onSubmit={handleSaveSettings} style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
             <div>
-              <label style={{ display: 'block', marginBottom: '5px', fontSize: '0.9rem', color: '#ccc' }}>Заголовок сайту:</label>
-              <input type="text" value={settings.site_title || ''} onChange={e => setSettings({...settings, site_title: e.target.value})} placeholder="🏆 Рейтинг KRUHLYK Community" style={{ width: '100%', padding: '10px', borderRadius: '5px', border: '1px solid #444', background: '#222', color: '#fff' }} />
+              <label className="admin-label">Заголовок сайту:</label>
+              <input type="text" value={settings.site_title || ''} onChange={e => setSettings({...settings, site_title: e.target.value})} placeholder="🏆 Рейтинг KRUHLYK Community" />
             </div>
             <div>
-              <label style={{ display: 'block', marginBottom: '5px', fontSize: '0.9rem', color: '#ccc' }}>Telegram Bot Token:</label>
-              <input type="text" value={settings.bot_token || ''} onChange={e => setSettings({...settings, bot_token: e.target.value})} placeholder="123456789:ABCdefGHIjklmNOPqrsTUVwxyz" style={{ width: '100%', padding: '10px', borderRadius: '5px', border: '1px solid #444', background: '#222', color: '#fff' }} />
+              <label className="admin-label">Telegram Bot Token:</label>
+              <input type="text" value={settings.bot_token || ''} onChange={e => setSettings({...settings, bot_token: e.target.value})} placeholder="123456789:ABCdefGHIjklmNOPqrsTUVwxyz" />
             </div>
             <div>
-              <label style={{ display: 'block', marginBottom: '5px', fontSize: '0.9rem', color: '#ccc' }}>Chat ID (опціонально, напр. -100123456789):</label>
-              <input type="text" value={settings.chat_id || ''} onChange={e => setSettings({...settings, chat_id: e.target.value})} placeholder="-100123456789" style={{ width: '100%', padding: '10px', borderRadius: '5px', border: '1px solid #444', background: '#222', color: '#fff' }} />
+              <label className="admin-label">Chat ID (опціонально, напр. -100123456789):</label>
+              <input type="text" value={settings.chat_id || ''} onChange={e => setSettings({...settings, chat_id: e.target.value})} placeholder="-100123456789" />
             </div>
             <div>
-              <label style={{ display: 'block', marginBottom: '5px', fontSize: '0.9rem', color: '#ccc' }}>WebApp URL (для кнопки Start):</label>
-              <input type="text" value={settings.webapp_url || ''} onChange={e => setSettings({...settings, webapp_url: e.target.value})} placeholder="https://kruhlyk.srvrs.top/" style={{ width: '100%', padding: '10px', borderRadius: '5px', border: '1px solid #444', background: '#222', color: '#fff' }} />
+              <label className="admin-label">WebApp URL (для кнопки Start):</label>
+              <input type="text" value={settings.webapp_url || ''} onChange={e => setSettings({...settings, webapp_url: e.target.value})} placeholder="https://kruhlyk.srvrs.top/" />
             </div>
             <div>
-              <label style={{ display: 'block', marginBottom: '5px', fontSize: '0.9rem', color: '#ccc' }}>Telegram ID власника чату (для відображення на почесному місці):</label>
-              <input type="text" value={settings.chat_owner_id || ''} onChange={e => setSettings({...settings, chat_owner_id: e.target.value})} placeholder="Наприклад: 123456789" style={{ width: '100%', padding: '10px', borderRadius: '5px', border: '1px solid #444', background: '#222', color: '#fff' }} />
+              <label className="admin-label">Telegram ID власника чату (для відображення на почесному місці):</label>
+              <input type="text" value={settings.chat_owner_id || ''} onChange={e => setSettings({...settings, chat_owner_id: e.target.value})} placeholder="Наприклад: 123456789" />
             </div>
             <div>
-              <label style={{ display: 'block', marginBottom: '5px', fontSize: '0.9rem', color: '#ccc' }}>Змінити пароль Адміна (залиште пустим, якщо не треба):</label>
-              <input type="text" value={settings.admin_password || ''} onChange={e => setSettings({...settings, admin_password: e.target.value})} placeholder="Новий пароль..." style={{ width: '100%', padding: '10px', borderRadius: '5px', border: '1px solid #444', background: '#222', color: '#fff' }} />
+              <label className="admin-label">Змінити пароль Адміна (залиште пустим, якщо не треба):</label>
+              <input type="text" value={settings.admin_password || ''} onChange={e => setSettings({...settings, admin_password: e.target.value})} placeholder="Новий пароль..." />
             </div>
             <button type="submit" disabled={loading} style={{ padding: '12px', background: '#28a745', color: '#fff', border: 'none', borderRadius: '5px', cursor: 'pointer', fontWeight: 'bold' }}>
               {loading ? 'Збереження...' : '💾 Зберегти налаштування'}
@@ -262,7 +260,7 @@ export default function Admin() {
         ) : (
           <form onSubmit={handleUpload} style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
             <div>
-              <label style={{ display: 'block', marginBottom: '5px', fontSize: '0.9rem', color: '#ccc' }}>Експорт історії (result.json):</label>
+              <label className="admin-label">Експорт історії (result.json):</label>
               <input type="file" accept=".json" onChange={(e) => setFile(e.target.files[0])} style={{ width: '100%', padding: '10px' }} />
             </div>
             <button type="submit" disabled={loading} style={{ padding: '12px', background: '#0088cc', color: '#fff', border: 'none', borderRadius: '5px', cursor: 'pointer', fontWeight: 'bold' }}>
@@ -272,15 +270,16 @@ export default function Admin() {
         )}
         
         {status && (
-          <div style={{ marginTop: '20px', padding: '10px', borderRadius: '5px', background: 'rgba(255,255,255,0.1)' }}>
+          <div className="status-box">
             {status}
           </div>
         )}
         
         <div style={{ marginTop: '20px', textAlign: 'center' }}>
-            <a href="/" style={{ color: '#aaa', textDecoration: 'none' }}>← Повернутися на головну</a>
+            <a href="/" className="back-link">← Повернутися на головну</a>
         </div>
       </div>
+
     </>
   );
 }

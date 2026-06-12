@@ -13,9 +13,26 @@
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 
-  /* Color scheme */
+  /* Spacing */
+  --radius-sm: 10px;
+  --radius-md: 14px;
+  --radius-lg: 20px;
+  --radius-xl: 24px;
+
+  /* Medals */
+  --gold: #f5c842;
+  --silver: #a8b4c0;
+  --bronze: #c78d5a;
+}
+
+/* Default Dark Theme / theme-dark class */
+:root,
+:root.theme-dark {
   color-scheme: dark;
-  color: var(--tg-theme-text-color, #e8eaed);
+  --text-main: var(--tg-theme-text-color, #e8eaed);
+  --text-muted: rgba(255, 255, 255, 0.5);
+  --text-username: rgba(255, 255, 255, 0.9);
+  --text-karma: rgba(255, 255, 255, 0.85);
 
   /* Surface colors — rich dark, NOT pure black */
   --bg-base: var(--tg-theme-bg-color, #0c0d12);
@@ -24,22 +41,102 @@
   --bg-color-glass-panel: rgba(255, 255, 255, 0.035);
   --glass-border: rgba(255, 255, 255, 0.06);
   --glass-blur: 20px;
+  --inner-highlight: rgba(255, 255, 255, 0.03);
+  --panel-shadow: rgba(0, 0, 0, 0.12);
+  --panel-shadow-hover: rgba(0, 0, 0, 0.15);
+
+  /* Inputs & Form Elements */
+  --input-bg: rgba(255, 255, 255, 0.04);
+  --input-border: rgba(255, 255, 255, 0.08);
+  --input-text: #e8eaed;
+  --input-label: #ccc;
+  
+  /* Onboarding */
+  --onboarding-bg: rgba(255, 255, 255, 0.02);
+  --onboarding-border: rgba(255, 255, 255, 0.04);
+  --onboarding-bg-hover: rgba(255, 255, 255, 0.04);
+  --onboarding-border-hover: rgba(255, 255, 255, 0.08);
+  --onboarding-title: rgba(255, 255, 255, 0.95);
+  
+  /* Profile Bar */
+  --profile-bar-bg: rgba(12, 13, 18, 0.75);
+  --profile-bar-border: rgba(255, 255, 255, 0.06);
 
   /* Accent */
   --accent-primary: var(--tg-theme-button-color, #7c6aff);
   --accent-glow: rgba(124, 106, 255, 0.25);
   --accent-text: var(--tg-theme-button-text-color, #ffffff);
 
-  /* Medals */
-  --gold: #f5c842;
-  --silver: #a8b4c0;
-  --bronze: #c78d5a;
+  /* Colors */
+  --color-success: #10b981;
+  --color-error: #ef4444;
 
-  /* Spacing */
-  --radius-sm: 10px;
-  --radius-md: 14px;
-  --radius-lg: 20px;
-  --radius-xl: 24px;
+  /* Shimmer */
+  --shimmer-color: rgba(255, 255, 255, 0.15);
+  --bar-shadow: rgba(0, 0, 0, 0.4);
+
+  /* Gradient Overlays */
+  --bg-gradient: 
+    radial-gradient(ellipse 80% 50% at 20% -10%, rgba(124, 106, 255, 0.12), transparent),
+    radial-gradient(ellipse 60% 40% at 80% 110%, rgba(255, 100, 180, 0.08), transparent),
+    radial-gradient(ellipse 50% 50% at 50% 50%, rgba(80, 200, 255, 0.04), transparent);
+}
+
+/* Light Theme overrides */
+:root.theme-light,
+html.theme-light {
+  color-scheme: light;
+  --text-main: var(--tg-theme-text-color, #1f2937); /* dark gray text */
+  --text-muted: rgba(31, 41, 55, 0.6);
+  --text-username: rgba(31, 41, 55, 0.9);
+  --text-karma: rgba(31, 41, 55, 0.85);
+
+  /* Surface colors — rich light glass */
+  --bg-base: var(--tg-theme-bg-color, #f4f6f9); /* light greyish-blue bg */
+  --bg-surface: rgba(0, 0, 0, 0.035);
+  --bg-surface-hover: rgba(0, 0, 0, 0.065);
+  --bg-color-glass-panel: rgba(255, 255, 255, 0.75); /* translucent white glass */
+  --glass-border: rgba(0, 0, 0, 0.08);
+  --glass-blur: 20px;
+  --inner-highlight: rgba(255, 255, 255, 0.6);
+  --panel-shadow: rgba(0, 0, 0, 0.04);
+  --panel-shadow-hover: rgba(0, 0, 0, 0.07);
+
+  /* Inputs & Form Elements */
+  --input-bg: rgba(0, 0, 0, 0.03);
+  --input-border: rgba(0, 0, 0, 0.08);
+  --input-text: #1f2937;
+  --input-label: #4b5563;
+  
+  /* Onboarding */
+  --onboarding-bg: rgba(0, 0, 0, 0.01);
+  --onboarding-border: rgba(0, 0, 0, 0.03);
+  --onboarding-bg-hover: rgba(0, 0, 0, 0.03);
+  --onboarding-border-hover: rgba(0, 0, 0, 0.06);
+  --onboarding-title: rgba(31, 41, 55, 0.95);
+
+  /* Profile Bar */
+  --profile-bar-bg: rgba(244, 246, 249, 0.88);
+  --profile-bar-border: rgba(0, 0, 0, 0.08);
+
+  /* Accent (same primary but glow has lower opacity/brightness) */
+  --accent-primary: var(--tg-theme-button-color, #5e4aff);
+  --accent-glow: rgba(94, 74, 255, 0.15);
+  --accent-text: var(--tg-theme-button-text-color, #ffffff);
+
+  /* Colors */
+  --color-success: #059669;
+  --color-error: #dc2626;
+
+  /* Shimmer */
+  --shimmer-color: rgba(0, 0, 0, 0.08);
+  --bar-shadow: rgba(0, 0, 0, 0.15);
+
+  /* Gradients for light theme */
+  --bg-gradient: 
+    radial-gradient(ellipse 80% 50% at 20% -10%, rgba(94, 74, 255, 0.08), transparent),
+    radial-gradient(ellipse 60% 40% at 80% 110%, rgba(255, 100, 180, 0.05), transparent),
+    radial-gradient(ellipse 50% 50% at 50% 50%, rgba(80, 200, 255, 0.03), transparent);
 }
 
 /* --- Global Reset & Body --- */
@@ -52,15 +149,14 @@ body {
   min-width: 320px;
   min-height: 100vh;
   background-color: var(--bg-base);
-  background-image:
-    radial-gradient(ellipse 80% 50% at 20% -10%, rgba(124, 106, 255, 0.12), transparent),
-    radial-gradient(ellipse 60% 40% at 80% 110%, rgba(255, 100, 180, 0.08), transparent),
-    radial-gradient(ellipse 50% 50% at 50% 50%, rgba(80, 200, 255, 0.04), transparent);
+  color: var(--text-main);
+  background-image: var(--bg-gradient);
   background-attachment: fixed;
   display: flex;
   justify-content: center;
   overflow-x: hidden;
 }
+
 
 /* --- App Root --- */
 #root {
@@ -82,9 +178,9 @@ div.glass-panel {
   border-radius: var(--radius-xl);
   padding: 1.25rem;
   box-shadow:
-    0 1px 2px rgba(0, 0, 0, 0.2),
-    0 8px 32px rgba(0, 0, 0, 0.12),
-    inset 0 1px 0 rgba(255, 255, 255, 0.03);
+    0 1px 2px rgba(0, 0, 0, 0.1),
+    0 8px 32px var(--panel-shadow),
+    inset 0 1px 0 var(--inner-highlight);
   transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1),
               box-shadow 0.25s cubic-bezier(0.4, 0, 0.2, 1);
 }
@@ -116,10 +212,11 @@ div.glass-panel {
 
 .header p {
   margin: 0.5rem 0 0;
-  color: rgba(255, 255, 255, 0.5);
+  color: var(--text-muted);
   font-size: 0.8rem;
   line-height: 1.6;
 }
+
 
 /* --- Leaderboard --- */
 .leaderboard {
@@ -167,7 +264,7 @@ div.glass-panel {
   transform: translateY(-1px);
   background: var(--bg-surface-hover);
   border-color: var(--glass-border);
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
+  box-shadow: 0 4px 16px var(--panel-shadow-hover);
 }
 
 /* --- Rank Badges --- */
@@ -180,8 +277,8 @@ div.glass-panel {
   align-items: center;
   justify-content: center;
   border-radius: 50%;
-  background: rgba(255, 255, 255, 0.06);
-  color: rgba(255, 255, 255, 0.5);
+  background: var(--bg-surface);
+  color: var(--text-muted);
   flex-shrink: 0;
   transition: transform 0.2s;
 }
@@ -216,7 +313,7 @@ div.glass-panel {
 .username {
   font-weight: 600;
   font-size: 0.95rem;
-  color: rgba(255, 255, 255, 0.9);
+  color: var(--text-username);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -229,7 +326,7 @@ div.glass-panel {
   gap: 0.3rem;
   font-weight: 700;
   font-size: 1rem;
-  color: rgba(255, 255, 255, 0.85);
+  color: var(--text-karma);
   font-variant-numeric: tabular-nums;
   flex-shrink: 0;
 }
@@ -253,11 +350,11 @@ div.glass-panel.my-profile {
   align-items: center;
   padding: 0.875rem 1.25rem;
   padding-bottom: calc(0.875rem + env(safe-area-inset-bottom, 0px));
-  background: rgba(12, 13, 18, 0.75) !important; /* Matte dark translucent */
+  background: var(--profile-bar-bg) !important; /* Matte translucent */
   backdrop-filter: blur(24px) saturate(1.4) !important;
   -webkit-backdrop-filter: blur(24px) saturate(1.4) !important;
   border: none !important;
-  border-top: 1px solid rgba(255, 255, 255, 0.06) !important;
+  border-top: 1px solid var(--profile-bar-border) !important;
   border-radius: 0 !important;
   box-shadow: none !important;
   animation: slideUp 0.5s cubic-bezier(0.16, 1, 0.3, 1) 0.3s backwards;
@@ -278,7 +375,7 @@ div.glass-panel.my-profile {
 .loader {
   text-align: center;
   padding: 2.5rem 1rem;
-  color: rgba(255, 255, 255, 0.4);
+  color: var(--text-muted);
   font-size: 0.9rem;
   font-style: normal;
   font-weight: 500;
@@ -292,7 +389,7 @@ div.glass-panel.my-profile {
   height: 4px;
   margin: 0.75rem auto 0;
   border-radius: 2px;
-  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.15), transparent);
+  background: linear-gradient(90deg, transparent, var(--shimmer-color), transparent);
   background-size: 200% 100%;
   animation: shimmer 1.5s infinite;
 }
@@ -302,6 +399,7 @@ div.glass-panel.my-profile {
   100% { background-position: -200% 0; }
 }
 
+
 /* --- Scrollbar --- */
 ::-webkit-scrollbar {
   width: 4px;
@@ -310,7 +408,7 @@ div.glass-panel.my-profile {
   background: transparent;
 }
 ::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.1);
+  background: var(--bg-surface-hover);
   border-radius: 4px;
 }
 
@@ -320,11 +418,13 @@ input[type="password"] {
   font-family: inherit;
   font-size: 0.9rem;
   border-radius: var(--radius-sm) !important;
-  border: 1px solid rgba(255, 255, 255, 0.08) !important;
-  background: rgba(255, 255, 255, 0.04) !important;
-  color: #e8eaed !important;
+  border: 1px solid var(--input-border) !important;
+  background: var(--input-bg) !important;
+  color: var(--input-text) !important;
   transition: border-color 0.2s, box-shadow 0.2s;
   outline: none;
+  width: 100%;
+  padding: 10px;
 }
 
 input[type="text"]:focus,
@@ -365,7 +465,7 @@ button[type="submit"]:active:not(:disabled),
   gap: 12px;
   justify-content: center;
   padding: 8px 12px 14px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  border-bottom: 1px solid var(--glass-border);
   margin-bottom: 12px;
 }
 
@@ -399,7 +499,7 @@ button[type="submit"]:active:not(:disabled),
 }
 
 .legend-label {
-  color: rgba(255, 255, 255, 0.65);
+  color: var(--text-muted);
   font-weight: 500;
 }
 
@@ -410,9 +510,9 @@ button[type="submit"]:active:not(:disabled),
   width: 100%;
   border-radius: 3px;
   overflow: hidden;
-  background: rgba(255, 255, 255, 0.05);
+  background: var(--bg-surface);
   margin-top: 6px;
-  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.4);
+  box-shadow: inset 0 1px 2px var(--bar-shadow);
 }
 
 .karma-bar-segment {
@@ -434,6 +534,11 @@ button[type="submit"]:active:not(:disabled),
   background: linear-gradient(90deg, #f857a6, #ff5858);
   box-shadow: 0 0 8px rgba(255, 88, 88, 0.3);
 }
+
+.karma-bar-segment.empty {
+  background: var(--bg-surface-hover);
+}
+
 
 /* Karma bar absolute statistics numbers */
 .karma-bar-stats {
@@ -486,7 +591,7 @@ button[type="submit"]:active:not(:disabled),
 
 .onboarding-intro {
   font-size: 0.85rem;
-  color: rgba(255, 255, 255, 0.7);
+  color: var(--text-muted);
   line-height: 1.5;
   margin: 0;
 }
@@ -501,8 +606,8 @@ button[type="submit"]:active:not(:disabled),
 .onboarding-step {
   display: flex;
   gap: 0.875rem;
-  background: rgba(255, 255, 255, 0.02);
-  border: 1px solid rgba(255, 255, 255, 0.04);
+  background: var(--onboarding-bg);
+  border: 1px solid var(--onboarding-border);
   padding: 0.875rem;
   border-radius: var(--radius-md);
   transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), background-color 0.2s;
@@ -510,8 +615,8 @@ button[type="submit"]:active:not(:disabled),
 
 .onboarding-step:hover {
   transform: translateX(3px);
-  background: rgba(255, 255, 255, 0.04);
-  border-color: rgba(255, 255, 255, 0.08);
+  background: var(--onboarding-bg-hover);
+  border-color: var(--onboarding-border-hover);
 }
 
 .step-num {
@@ -533,12 +638,12 @@ button[type="submit"]:active:not(:disabled),
   font-size: 0.9rem;
   font-weight: 700;
   margin: 0 0 0.25rem;
-  color: rgba(255, 255, 255, 0.95);
+  color: var(--onboarding-title);
 }
 
 .step-content p {
   font-size: 0.78rem;
-  color: rgba(255, 255, 255, 0.55);
+  color: var(--text-muted);
   line-height: 1.45;
   margin: 0;
 }
@@ -580,7 +685,7 @@ button[type="submit"]:active:not(:disabled),
   margin-top: 1.5rem;
   margin-bottom: 1.5rem;
   font-size: 0.75rem;
-  color: rgba(255, 255, 255, 0.4);
+  color: var(--text-muted);
   display: flex;
   flex-direction: column;
   gap: 4px;
@@ -591,7 +696,7 @@ button[type="submit"]:active:not(:disabled),
 }
 
 .footer-credits a {
-  color: rgba(255, 255, 255, 0.55);
+  color: var(--text-muted);
   text-decoration: underline;
   text-underline-offset: 2px;
   transition: color 0.2s;
@@ -624,7 +729,7 @@ button[type="submit"]:active:not(:disabled),
 }
 
 .owner-item {
-  background: rgba(255, 255, 255, 0.01) !important;
+  background: transparent !important;
   border: none !important;
   padding: 0 !important;
   box-shadow: none !important;
@@ -635,4 +740,45 @@ button[type="submit"]:active:not(:disabled),
   color: #ffc107;
   box-shadow: 0 0 12px rgba(255, 193, 7, 0.15);
   font-size: 1rem;
+}
+
+/* --- Admin Panel custom classes --- */
+.admin-label {
+  display: block;
+  margin-bottom: 5px;
+  font-size: 0.9rem;
+  color: var(--input-label);
+}
+
+.status-message {
+  margin-top: 15px;
+  font-weight: 500;
+}
+.status-message.success {
+  color: var(--color-success);
+}
+.status-message.error {
+  color: var(--color-error);
+}
+
+.status-box {
+  margin-top: 20px;
+  padding: 10px;
+  border-radius: var(--radius-sm);
+  background: var(--bg-surface);
+  border: 1px solid var(--glass-border);
+  color: var(--text-main);
+}
+
+.back-link {
+  color: var(--text-muted);
+  text-decoration: none;
+  transition: color 0.2s;
+}
+.back-link:hover {
+  color: var(--accent-primary);
+}
+
+.error-text {
+  color: var(--color-error);
 }
