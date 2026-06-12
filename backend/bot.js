@@ -34,10 +34,13 @@ async function startBot(token, webAppUrl, targetChatId) {
     
     if (ctx.chat.type === 'supergroup' || ctx.chat.type === 'group') {
       if (targetChatId && String(ctx.chat.id) !== String(targetChatId)) return;
-      await db.run(
+      const res = await db.run(
         'INSERT OR IGNORE INTO messages (message_id, chat_id, user_id) VALUES (?, ?, ?)',
         [ctx.message.message_id, ctx.chat.id, ctx.from.id]
       );
+      if (res.changes > 0) {
+        await updateLastUpdateTime(db);
+      }
     }
   });
 
@@ -101,6 +104,7 @@ async function startBot(token, webAppUrl, targetChatId) {
          WHERE id = ?`,
         [karmaDelta, flooderDelta, guruDelta, skepticDelta, authorId]
       );
+      await updateLastUpdateTime(db);
     }
   });
 
@@ -123,6 +127,25 @@ async function registerUser(db, user) {
        join_date=MIN(users.join_date, excluded.join_date)`,
     [user.id, user.username, user.first_name, Math.floor(Date.now() / 1000)]
   );
+}
+
+async function updateLastUpdateTime(db) {
+  try {
+    const now = new Date();
+    const formatter = new Intl.DateTimeFormat('uk-UA', {
+      timeZone: 'Europe/Kyiv',
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: false
+    });
+    const formattedDate = formatter.format(now).replace(',', '').replace(/\s+/g, ' ').trim();
+    await db.run('INSERT OR REPLACE INTO settings (key, value) VALUES (?, ?)', ['last_update', formattedDate]);
+  } catch (e) {
+    console.error('Error updating last_update time:', e);
+  }
 }
 
 module.exports = { startBot };
