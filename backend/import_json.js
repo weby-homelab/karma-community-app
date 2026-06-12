@@ -116,6 +116,37 @@ async function importData() {
     }
     
     await stmt.finalize();
+
+    // Import messages from JSON so that message reactions work for historical messages
+    let chatId = null;
+    const chatIdRow = await db.get("SELECT value FROM settings WHERE key = 'chat_id'");
+    if (chatIdRow && chatIdRow.value) {
+      chatId = parseInt(chatIdRow.value, 10);
+    } else if (data.id) {
+      chatId = parseInt(data.id, 10);
+      if (chatId > 0) {
+        chatId = -parseInt("100" + data.id, 10);
+      }
+    }
+
+    if (chatId) {
+      const msgStmt = await db.prepare(
+        `INSERT OR IGNORE INTO messages (message_id, chat_id, user_id) VALUES (?, ?, ?)`
+      );
+      for (const msg of messages) {
+        if (!msg.id || !msg.from_id || typeof msg.from_id !== 'string') continue;
+        let userId = null;
+        if (msg.from_id.startsWith('user')) {
+          userId = parseInt(msg.from_id.substring(4), 10);
+        } else if (msg.from_id.startsWith('channel')) {
+          userId = parseInt(msg.from_id.substring(7), 10);
+        }
+        if (userId) {
+          await msgStmt.run([msg.id, chatId, userId]);
+        }
+      }
+      await msgStmt.finalize();
+    }
     
     // Update last_update setting
     const now = new Date();
