@@ -7,9 +7,11 @@ import Admin from './Admin.jsx'
 // Theme Initialization
 const initTheme = () => {
   const tg = window.Telegram?.WebApp;
+  const isInsideTelegram = tg && tg.platform && tg.platform !== 'unknown';
+
   const updateClass = () => {
     let isDark = true;
-    if (tg?.colorScheme) {
+    if (isInsideTelegram && tg.colorScheme) {
       isDark = tg.colorScheme === 'dark';
     } else {
       isDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
@@ -18,20 +20,28 @@ const initTheme = () => {
     document.documentElement.classList.toggle('theme-light', !isDark);
   };
 
-  if (tg) {
+  if (isInsideTelegram) {
     tg.onEvent('themeChanged', updateClass);
-  } else {
-    const media = window.matchMedia('(prefers-color-scheme: dark)');
-    if (media.addEventListener) {
-      media.addEventListener('change', updateClass);
-    } else {
-      media.addListener(updateClass);
-    }
   }
+
+  const media = window.matchMedia('(prefers-color-scheme: dark)');
+  const handleMediaChange = () => {
+    if (!isInsideTelegram) {
+      updateClass();
+    }
+  };
+  
+  if (media.addEventListener) {
+    media.addEventListener('change', handleMediaChange);
+  } else {
+    media.addListener(handleMediaChange);
+  }
+  
   updateClass();
 };
 
 initTheme();
+
 
 const path = window.location.pathname;
 
