@@ -339,24 +339,22 @@ div.glass-panel {
 /* --- Bottom Profile Bar --- */
 div.glass-panel.my-profile {
   position: fixed;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  max-width: 520px;
+  bottom: calc(16px + env(safe-area-inset-bottom, 0px));
+  left: 16px;
+  right: 16px;
+  max-width: calc(520px - 32px);
   margin: 0 auto;
   z-index: 100;
   display: flex;
-  justify-content: space-between;
   align-items: center;
-  padding: 0.875rem 1.25rem;
-  padding-bottom: calc(0.875rem + env(safe-area-inset-bottom, 0px));
+  gap: 0.875rem;
+  padding: 1rem 1.25rem;
   background: var(--profile-bar-bg) !important; /* Matte translucent */
   backdrop-filter: blur(24px) saturate(1.4) !important;
   -webkit-backdrop-filter: blur(24px) saturate(1.4) !important;
-  border: none !important;
-  border-top: 1px solid var(--profile-bar-border) !important;
-  border-radius: 0 !important;
-  box-shadow: none !important;
+  border: 1px solid var(--profile-bar-border) !important;
+  border-radius: var(--radius-lg) !important; /* Rounded corners */
+  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.35), inset 0 1px 0 var(--inner-highlight) !important;
   animation: slideUp 0.5s cubic-bezier(0.16, 1, 0.3, 1) 0.3s backwards;
 }
 

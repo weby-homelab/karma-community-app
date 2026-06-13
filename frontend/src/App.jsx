@@ -285,9 +285,11 @@ function App() {
 
         return (
           <div className="glass-panel my-profile">
+            <div className={`rank ${getRankClass(myProfile.rank - 1)}`}>
+              #{myProfile.rank}
+            </div>
             <div className="user-info">
               <span className="username">Мій профіль ({myProfile.first_name})</span>
-              <span style={{ fontSize: '0.85rem', opacity: 0.8 }}>Позиція: #{myProfile.rank}</span>
               <div className="karma-bar-container">
                 {flooder > 0 && (
                   <div 
