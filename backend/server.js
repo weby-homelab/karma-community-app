@@ -13,12 +13,18 @@ const upload = multer({
   limits: { fileSize: 50 * 1024 * 1024 } // Limit file size to 50MB
 });
 
-const crypto = require('crypto');
-function safeCompare(a, b) {
-  if (typeof a !== 'string' || typeof b !== 'string') return false;
-  const aHash = crypto.createHash('sha256').update(a).digest();
-  const bHash = crypto.createHash('sha256').update(b).digest();
-  return crypto.timingSafeEqual(aHash, bHash);
+const bcrypt = require('bcryptjs');
+
+function getAdminPasswordHash(settings) {
+  const rawPassword = settings.admin_password || process.env.ADMIN_PASSWORD;
+  if (!rawPassword) return null;
+  const isBcryptHash = rawPassword.startsWith('$2a$') || 
+                       rawPassword.startsWith('$2b$') || 
+                       rawPassword.startsWith('$2y$');
+  if (isBcryptHash && rawPassword.length === 60) {
+    return rawPassword;
+  }
+  return bcrypt.hashSync(rawPassword, 12);
 }
 
 
@@ -139,7 +145,8 @@ app.post('/api/admin/setup', async (req, res) => {
       return res.status(403).json({ error: 'Пароль вже встановлено' });
     }
 
-    await updateSettings({ admin_password: password });
+    const hashedPassword = bcrypt.hashSync(password, 12);
+    await updateSettings({ admin_password: hashedPassword });
     res.json({ success: true });
   } catch (error) {
     res.status(500).json({ error: 'Помилка сервера' });
@@ -150,13 +157,13 @@ app.post('/api/admin/login', async (req, res) => {
   try {
     const { password } = req.body;
     const settings = await getSettings();
-    const adminPassword = settings.admin_password || process.env.ADMIN_PASSWORD;
+    const adminPasswordHash = getAdminPasswordHash(settings);
     
-    if (!adminPassword) {
+    if (!adminPasswordHash) {
       return res.status(403).json({ error: 'Адмін-пароль не встановлено. Використовуйте сторінку налаштування.' });
     }
 
-    if (safeCompare(password, adminPassword)) {
+    if (bcrypt.compareSync(password, adminPasswordHash)) {
       res.json({ success: true });
     } else {
       res.status(401).json({ error: 'Невірний пароль' });
@@ -170,10 +177,23 @@ app.post('/api/admin/settings', async (req, res) => {
   try {
     const { password, newSettings } = req.body;
     const settings = await getSettings();
-    const adminPassword = settings.admin_password || process.env.ADMIN_PASSWORD;
+    const adminPasswordHash = getAdminPasswordHash(settings);
     
-    if (!adminPassword || !safeCompare(password, adminPassword)) {
+    if (!adminPasswordHash || !bcrypt.compareSync(password, adminPasswordHash)) {
       return res.status(401).send('Невірний пароль');
+    }
+
+    if (newSettings) {
+      if (newSettings.admin_password && typeof newSettings.admin_password === 'string' && newSettings.admin_password.trim() !== '') {
+        const isBcryptHash = newSettings.admin_password.startsWith('$2a$') || 
+                             newSettings.admin_password.startsWith('$2b$') || 
+                             newSettings.admin_password.startsWith('$2y$');
+        if (!(isBcryptHash && newSettings.admin_password.length === 60)) {
+          newSettings.admin_password = bcrypt.hashSync(newSettings.admin_password, 12);
+        }
+      } else {
+        delete newSettings.admin_password;
+      }
     }
 
     await updateSettings(newSettings);
@@ -191,13 +211,16 @@ app.post('/api/admin/settings/view', async (req, res) => {
   try {
     const { password } = req.body;
     const settings = await getSettings();
-    const adminPassword = settings.admin_password || process.env.ADMIN_PASSWORD;
+    const adminPasswordHash = getAdminPasswordHash(settings);
     
-    if (!adminPassword || !safeCompare(password, adminPassword)) {
+    if (!adminPasswordHash || !bcrypt.compareSync(password, adminPasswordHash)) {
       return res.status(401).send('Невірний пароль');
     }
 
-    res.json(settings);
+    const responseSettings = { ...settings };
+    responseSettings.admin_password = '';
+
+    res.json(responseSettings);
   } catch (error) {
     console.error('Get settings error:', error);
     res.status(500).send('Помилка сервера');
@@ -208,9 +231,9 @@ app.post('/api/admin/upload-json', upload.single('file'), async (req, res) => {
   try {
     const password = req.body.password;
     const settings = await getSettings();
-    const adminPassword = settings.admin_password || process.env.ADMIN_PASSWORD;
+    const adminPasswordHash = getAdminPasswordHash(settings);
     
-    if (!adminPassword || !safeCompare(password, adminPassword)) {
+    if (!adminPasswordHash || !bcrypt.compareSync(password, adminPasswordHash)) {
       return res.status(401).send('Невірний пароль');
     }
 
