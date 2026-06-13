@@ -8,7 +8,6 @@
 * **Віддача статики через Express:** Вилучено необхідність запускати окремий Vite-сервер. Backend тепер автоматично віддає скомпільовану статику та обробляє SPA fallback-маршрути (`/*`).
 * **Виправлення сумісності SQLite:** Усунуто проблеми зібраних бібліотек (C++ Segfaults) під час роботи в Alpine середовищі.
 * **Оновлення README:** Документацію переписано під новий архітектурний підхід з використанням актуальних Mermaid-діаграм та інструкцією для `docker-compose`.
-* **Classic гілка:** Стара bare-metal версія (через Systemd) переміщена в гілку `classic` для тих, хто бажає продовжити використовувати класичний метод.
 * **Скріншоти та Адмінка:** Оновлено графічні матеріали, додано розділ з описом можливостей Адмін-панелі.
 
 ---
@@ -21,5 +20,4 @@ This is a major release that fully transitions the project architecture to a **D
 * **Static Serving via Express:** Removed the need to run a separate Vite server. The backend now automatically serves the compiled static files and handles SPA fallback routes (`/*`).
 * **SQLite Compatibility Fixes:** Resolved issues with compiled libraries (C++ Segfaults) when running in an Alpine environment.
 * **README Updates:** Documentation has been rewritten for the new architectural approach, featuring updated Mermaid diagrams and `docker-compose` instructions.
-* **Classic Branch:** The old bare-metal version (via Systemd) has been moved to the `classic` branch for those who wish to continue using the legacy method.
 * **Screenshots & Admin Panel:** Updated graphical assets and added a section describing the capabilities of the Admin Panel.
