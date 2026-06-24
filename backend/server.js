@@ -6,6 +6,7 @@ const multer = require('multer');
 const { getDb } = require('./db');
 const { getSettings, updateSettings } = require('./settings');
 const { startBot } = require('./bot');
+const { recalculateUserKarma } = require('./karma');
 
 const app = express();
 const upload = multer({
@@ -91,7 +92,14 @@ app.get('/api/settings', async (req, res) => {
       if (!isNaN(cleanId) && cleanId.length > 0) {
         // Find by numeric user ID
         ownerInfo = await db.get(
-          'SELECT id, username, first_name, karma, karma_flooder, karma_guru, karma_skeptic FROM users WHERE id = ?',
+          `SELECT 
+            u.id, u.username, u.first_name, u.karma, u.karma_flooder, u.karma_guru, u.karma_skeptic, u.message_count, u.engaged_message_count,
+            (SELECT COUNT(*) FROM replies r WHERE r.author_id = u.id) AS replies_count,
+            (SELECT COUNT(*) FROM reactions rx WHERE rx.author_id = u.id AND rx.emoji IN ('😁', '🤣', '🤪')) AS reactions_flooder_count,
+            (SELECT COUNT(*) FROM reactions rx WHERE rx.author_id = u.id AND rx.emoji IN ('🔥', '👍', '💯', '🤝', '🫡', '❤️', '❤', '❤️🔥', '👌', '😎')) AS reactions_guru_count,
+            (SELECT COUNT(*) FROM reactions rx WHERE rx.author_id = u.id AND rx.emoji IN ('🤔', '👀', '🤷‍♂️', '🤷\u200d♂️', '🤷', '🤯', '😱', '😢', '🙈', '🥴')) AS reactions_skeptic_count,
+            (SELECT COUNT(*) FROM reactions rx WHERE rx.author_id = u.id AND rx.emoji IN ('👎', '🤮', '💩')) AS reactions_negative_count
+           FROM users u WHERE u.id = ?`,
           [parseInt(cleanId, 10)]
         );
       }
@@ -103,7 +111,14 @@ app.get('/api/settings', async (req, res) => {
           searchName = searchName.substring(1);
         }
         ownerInfo = await db.get(
-          'SELECT id, username, first_name, karma, karma_flooder, karma_guru, karma_skeptic FROM users WHERE (username <> "" AND LOWER(username) = ?) OR LOWER(first_name) = ?',
+          `SELECT 
+            u.id, u.username, u.first_name, u.karma, u.karma_flooder, u.karma_guru, u.karma_skeptic, u.message_count, u.engaged_message_count,
+            (SELECT COUNT(*) FROM replies r WHERE r.author_id = u.id) AS replies_count,
+            (SELECT COUNT(*) FROM reactions rx WHERE rx.author_id = u.id AND rx.emoji IN ('😁', '🤣', '🤪')) AS reactions_flooder_count,
+            (SELECT COUNT(*) FROM reactions rx WHERE rx.author_id = u.id AND rx.emoji IN ('🔥', '👍', '💯', '🤝', '🫡', '❤️', '❤', '❤️🔥', '👌', '😎')) AS reactions_guru_count,
+            (SELECT COUNT(*) FROM reactions rx WHERE rx.author_id = u.id AND rx.emoji IN ('🤔', '👀', '🤷‍♂️', '🤷\u200d♂️', '🤷', '🤯', '😱', '😢', '🙈', '🥴')) AS reactions_skeptic_count,
+            (SELECT COUNT(*) FROM reactions rx WHERE rx.author_id = u.id AND rx.emoji IN ('👎', '🤮', '💩')) AS reactions_negative_count
+           FROM users u WHERE (u.username <> "" AND LOWER(u.username) = ?) OR LOWER(u.first_name) = ?`,
           [searchName.toLowerCase(), searchName.toLowerCase()]
         );
       }
@@ -245,97 +260,8 @@ app.post('/api/admin/upload-json', upload.single('file'), async (req, res) => {
     const messages = data.messages || [];
     
     const db = await getDb();
-    const userMap = new Map();
-
-    for (const msg of messages) {
-      if (!msg.from_id || typeof msg.from_id !== 'string') {
-        continue;
-      }
-
-      let userId;
-      if (msg.from_id.startsWith('user')) {
-        userId = parseInt(msg.from_id.substring(4), 10);
-      } else if (msg.from_id.startsWith('channel')) {
-        userId = parseInt(msg.from_id.substring(7), 10);
-      } else {
-        continue;
-      }
-      const firstName = msg.from || 'Unknown';
-      const msgDate = parseInt(msg.date_unixtime || '9999999999', 10);
-      let karmaToAdd = 0;
-      let flooderToAdd = 0;
-      let guruToAdd = 0;
-      let skepticToAdd = 0;
-      
-      if (msg.reactions && Array.isArray(msg.reactions)) {
-        for (const reaction of msg.reactions) {
-          if (reaction.type === 'emoji') {
-            const emoji = reaction.emoji;
-            const count = reaction.count || 1;
-            if (FLOODER_EMOJIS.includes(emoji)) {
-              flooderToAdd += count;
-              karmaToAdd += count;
-            } else if (GURU_EMOJIS.includes(emoji)) {
-              guruToAdd += count;
-              karmaToAdd += count;
-            } else if (SKEPTIC_EMOJIS.includes(emoji)) {
-              skepticToAdd += count;
-              karmaToAdd += count;
-            }
-          }
-        }
-      }
-      
-      if (!userMap.has(userId)) {
-        userMap.set(userId, { 
-          id: userId, 
-          first_name: firstName, 
-          username: '', 
-          karma: 0, 
-          karma_flooder: 0, 
-          karma_guru: 0, 
-          karma_skeptic: 0, 
-          join_date: msgDate 
-        });
-      } else {
-        const u = userMap.get(userId);
-        if (msgDate < u.join_date) {
-          u.join_date = msgDate;
-        }
-      }
-      
-      if (karmaToAdd > 0) {
-        const u = userMap.get(userId);
-        u.karma += karmaToAdd;
-        u.karma_flooder += flooderToAdd;
-        u.karma_guru += guruToAdd;
-        u.karma_skeptic += skepticToAdd;
-        u.first_name = firstName;
-      }
-    }
     
-    await db.exec('BEGIN TRANSACTION');
-    await db.exec('DELETE FROM users;');
-    await db.exec('DELETE FROM messages;');
-    const stmt = await db.prepare(
-      `INSERT INTO users (id, username, first_name, karma, karma_flooder, karma_guru, karma_skeptic, join_date) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-       ON CONFLICT(id) DO UPDATE SET 
-         first_name=excluded.first_name, 
-         karma=users.karma + excluded.karma,
-         karma_flooder=users.karma_flooder + excluded.karma_flooder,
-         karma_guru=users.karma_guru + excluded.karma_guru,
-         karma_skeptic=users.karma_skeptic + excluded.karma_skeptic,
-         join_date=MIN(users.join_date, excluded.join_date)`
-    );
-    
-    for (const u of userMap.values()) {
-      // Insert all users, even those with 0 karma
-      await stmt.run([u.id, u.username, u.first_name, u.karma, u.karma_flooder, u.karma_guru, u.karma_skeptic, u.join_date]);
-    }
-    
-    await stmt.finalize();
-
-    // Import messages from JSON so that message reactions work for historical messages
+    // Determine chat_id
     let chatId = null;
     const chatIdRow = await db.get("SELECT value FROM settings WHERE key = 'chat_id'");
     if (chatIdRow && chatIdRow.value) {
@@ -347,42 +273,141 @@ app.post('/api/admin/upload-json', upload.single('file'), async (req, res) => {
       }
     }
 
-    if (chatId) {
+    if (!chatId) {
+      return res.status(400).send('Неможливо визначити ID чату');
+    }
+
+    // Map to resolve message authors for replies and registrations
+    const messageIdToUserId = new Map();
+    const userInfos = new Map();
+
+    for (const msg of messages) {
+      if (!msg.from_id || typeof msg.from_id !== 'string') continue;
+      
+      let userId;
+      if (msg.from_id.startsWith('user')) {
+        userId = parseInt(msg.from_id.substring(4), 10);
+      } else if (msg.from_id.startsWith('channel')) {
+        userId = parseInt(msg.from_id.substring(7), 10);
+      } else {
+        continue;
+      }
+      
+      messageIdToUserId.set(msg.id, userId);
+      
+      const firstName = msg.from || 'Unknown';
+      const msgDate = parseInt(msg.date_unixtime || '9999999999', 10);
+      
+      if (!userInfos.has(userId)) {
+        userInfos.set(userId, {
+          id: userId,
+          first_name: firstName,
+          username: '',
+          join_date: msgDate
+        });
+      } else {
+        const u = userInfos.get(userId);
+        if (msgDate < u.join_date) {
+          u.join_date = msgDate;
+        }
+      }
+    }
+
+    await db.exec('BEGIN TRANSACTION');
+    try {
+      await db.exec('DELETE FROM users;');
+      await db.exec('DELETE FROM messages;');
+      await db.exec('DELETE FROM reactions;');
+      await db.exec('DELETE FROM replies;');
+
+      // 1. Insert users
+      const userStmt = await db.prepare(
+        `INSERT INTO users (id, username, first_name, karma, karma_flooder, karma_guru, karma_skeptic, join_date, message_count, engaged_message_count) 
+         VALUES (?, ?, ?, 0, 0, 0, 0, ?, 0, 0)`
+      );
+      for (const u of userInfos.values()) {
+        await userStmt.run([u.id, u.username, u.first_name, u.join_date]);
+      }
+      await userStmt.finalize();
+
+      // 2. Insert messages
       const msgStmt = await db.prepare(
         `INSERT OR IGNORE INTO messages (message_id, chat_id, user_id) VALUES (?, ?, ?)`
       );
       for (const msg of messages) {
-        if (!msg.id || !msg.from_id || typeof msg.from_id !== 'string') continue;
-        let userId = null;
-        if (msg.from_id.startsWith('user')) {
-          userId = parseInt(msg.from_id.substring(4), 10);
-        } else if (msg.from_id.startsWith('channel')) {
-          userId = parseInt(msg.from_id.substring(7), 10);
-        }
+        if (!msg.id) continue;
+        const userId = messageIdToUserId.get(msg.id);
         if (userId) {
           await msgStmt.run([msg.id, chatId, userId]);
         }
       }
       await msgStmt.finalize();
+
+      // 3. Insert replies
+      const replyStmt = await db.prepare(
+        `INSERT OR IGNORE INTO replies (reply_message_id, reply_chat_id, parent_message_id, parent_chat_id, replier_id, author_id)
+         VALUES (?, ?, ?, ?, ?, ?)`
+      );
+      for (const msg of messages) {
+        if (!msg.id || !msg.reply_to_message_id) continue;
+        const replierId = messageIdToUserId.get(msg.id);
+        const parentMsgId = msg.reply_to_message_id;
+        const parentAuthorId = messageIdToUserId.get(parentMsgId);
+        
+        if (replierId && parentAuthorId && replierId !== parentAuthorId) {
+          await replyStmt.run([msg.id, chatId, parentMsgId, chatId, replierId, parentAuthorId]);
+        }
+      }
+      await replyStmt.finalize();
+
+      // 4. Insert reactions with unique dummy reactor IDs
+      let dummyReactorId = -1;
+      const rxStmt = await db.prepare(
+        `INSERT INTO reactions (message_id, chat_id, reactor_id, author_id, emoji) VALUES (?, ?, ?, ?, ?)`
+      );
+      for (const msg of messages) {
+        if (!msg.id || !msg.reactions || !Array.isArray(msg.reactions)) continue;
+        const authorId = messageIdToUserId.get(msg.id);
+        if (!authorId) continue;
+
+        for (const reaction of msg.reactions) {
+          if (reaction.type === 'emoji') {
+            const emoji = reaction.emoji;
+            const count = reaction.count || 1;
+            for (let i = 0; i < count; i++) {
+              await rxStmt.run([msg.id, chatId, dummyReactorId--, authorId, emoji]);
+            }
+          }
+        }
+      }
+      await rxStmt.finalize();
+
+      // 5. Recalculate karma for all users
+      for (const userId of userInfos.keys()) {
+        await recalculateUserKarma(db, userId);
+      }
+      
+      await db.exec('COMMIT');
+
+      // Update last_update setting after a successful import (run outside transaction)
+      const now = new Date();
+      const formatter = new Intl.DateTimeFormat('uk-UA', {
+        timeZone: 'Europe/Kyiv',
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit',
+        hour: '2-digit',
+        minute: '2-digit',
+        hour12: false
+      });
+      const formattedDate = formatter.format(now).replace(',', '').replace(/\s+/g, ' ').trim();
+      await updateSettings({ last_update: formattedDate });
+      
+      res.status(200).send('Успішно оновлено');
+    } catch (err) {
+      await db.exec('ROLLBACK');
+      throw err;
     }
-
-    await db.exec('COMMIT');
-
-    // Update last_update setting after a successful import
-    const now = new Date();
-    const formatter = new Intl.DateTimeFormat('uk-UA', {
-      timeZone: 'Europe/Kyiv',
-      year: 'numeric',
-      month: '2-digit',
-      day: '2-digit',
-      hour: '2-digit',
-      minute: '2-digit',
-      hour12: false
-    });
-    const formattedDate = formatter.format(now).replace(',', '').replace(/\s+/g, ' ').trim();
-    await updateSettings({ last_update: formattedDate });
-
-    res.status(200).send('Успішно оновлено');
   } catch (error) {
     console.error('Upload error:', error);
     res.status(500).send('Внутрішня помилка сервера під час обробки файлу');
@@ -392,7 +417,16 @@ app.post('/api/admin/upload-json', upload.single('file'), async (req, res) => {
   app.get('/api/leaderboard', async (req, res) => {
   try {
     const db = await getDb();
-    const topUsers = await db.all('SELECT id, username, first_name, karma, karma_flooder, karma_guru, karma_skeptic FROM users ORDER BY karma DESC, join_date ASC, id ASC LIMIT 50');
+    const topUsers = await db.all(
+      `SELECT 
+        u.id, u.username, u.first_name, u.karma, u.karma_flooder, u.karma_guru, u.karma_skeptic, u.message_count, u.engaged_message_count,
+        (SELECT COUNT(*) FROM replies r WHERE r.author_id = u.id) AS replies_count,
+        (SELECT COUNT(*) FROM reactions rx WHERE rx.author_id = u.id AND rx.emoji IN ('😁', '🤣', '🤪')) AS reactions_flooder_count,
+        (SELECT COUNT(*) FROM reactions rx WHERE rx.author_id = u.id AND rx.emoji IN ('🔥', '👍', '💯', '🤝', '🫡', '❤️', '❤', '❤️🔥', '👌', '😎')) AS reactions_guru_count,
+        (SELECT COUNT(*) FROM reactions rx WHERE rx.author_id = u.id AND rx.emoji IN ('🤔', '👀', '🤷‍♂️', '🤷\u200d♂️', '🤷', '🤯', '😱', '😢', '🙈', '🥴')) AS reactions_skeptic_count,
+        (SELECT COUNT(*) FROM reactions rx WHERE rx.author_id = u.id AND rx.emoji IN ('👎', '🤮', '💩')) AS reactions_negative_count
+       FROM users u ORDER BY u.karma DESC, u.join_date ASC, u.id ASC LIMIT 50`
+    );
     res.json(topUsers);
   } catch (error) {
     console.error('Leaderboard error:', error);
@@ -406,28 +440,46 @@ app.get('/api/user/:id', async (req, res) => {
     const { username, first_name } = req.query;
     const db = await getDb();
     
-    let user = await db.get('SELECT id, username, first_name, karma, karma_flooder, karma_guru, karma_skeptic, join_date FROM users WHERE id = ?', id);
+    let user = await db.get('SELECT id, username, first_name, karma, karma_flooder, karma_guru, karma_skeptic, message_count, engaged_message_count, join_date FROM users WHERE id = ?', id);
     
     // Auto-register if user not found and info is provided
     if (!user && first_name) {
       await db.run(
-        'INSERT INTO users (id, username, first_name, karma, karma_flooder, karma_guru, karma_skeptic, join_date) VALUES (?, ?, ?, 0, 0, 0, 0, ?)',
+        'INSERT INTO users (id, username, first_name, karma, karma_flooder, karma_guru, karma_skeptic, message_count, engaged_message_count, join_date) VALUES (?, ?, ?, 0, 0, 0, 0, 0, 0, ?)',
         [id, username || '', first_name, Math.floor(Date.now() / 1000)]
       );
-      user = { id: parseInt(id), username: username || '', first_name, karma: 0, karma_flooder: 0, karma_guru: 0, karma_skeptic: 0, join_date: Math.floor(Date.now() / 1000) };
+      user = { id: parseInt(id), username: username || '', first_name, karma: 0, karma_flooder: 0, karma_guru: 0, karma_skeptic: 0, message_count: 0, engaged_message_count: 0, join_date: Math.floor(Date.now() / 1000) };
     }
 
     if (!user) {
       return res.status(404).json({ error: 'User not found' });
     }
 
-    // Rank logic: count users with more karma OR same karma but older account (smaller join_date) OR same karma and join_date but smaller ID
+    // Get replies received count
+    const repliesRow = await db.get('SELECT COUNT(*) as total FROM replies WHERE author_id = ?', [user.id]);
+    const repliesCount = repliesRow ? repliesRow.total : 0;
+
+    // Get reactions count by category
+    const rxFlooder = await db.get(`SELECT COUNT(*) as total FROM reactions WHERE author_id = ? AND emoji IN ('😁', '🤣', '🤪')`, [user.id]);
+    const rxGuru = await db.get(`SELECT COUNT(*) as total FROM reactions WHERE author_id = ? AND emoji IN ('🔥', '👍', '💯', '🤝', '🫡', '❤️', '❤', '❤️🔥', '👌', '😎')`, [user.id]);
+    const rxSkeptic = await db.get(`SELECT COUNT(*) as total FROM reactions WHERE author_id = ? AND emoji IN ('🤔', '👀', '🤷‍♂️', '🤷\u200d♂️', '🤷', '🤯', '😱', '😢', '🙈', '🥴')`, [user.id]);
+    const rxNegative = await db.get(`SELECT COUNT(*) as total FROM reactions WHERE author_id = ? AND emoji IN ('👎', '🤮', '💩')`, [user.id]);
+
+    // Rank logic
     const rankData = await db.get(
       'SELECT COUNT(*) as rank FROM users WHERE karma > ? OR (karma = ? AND join_date < ?) OR (karma = ? AND join_date = ? AND id <= ?)',
       [user.karma, user.karma, user.join_date, user.karma, user.join_date, user.id]
     );
     
-    res.json({ ...user, rank: rankData.rank });
+    res.json({ 
+      ...user, 
+      rank: rankData.rank,
+      replies_count: repliesCount,
+      reactions_flooder_count: rxFlooder ? rxFlooder.total : 0,
+      reactions_guru_count: rxGuru ? rxGuru.total : 0,
+      reactions_skeptic_count: rxSkeptic ? rxSkeptic.total : 0,
+      reactions_negative_count: rxNegative ? rxNegative.total : 0
+    });
   } catch (error) {
     console.error('User profile error:', error);
     res.status(500).json({ error: 'Internal Server Error' });

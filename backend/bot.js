@@ -1,5 +1,14 @@
 const { Bot } = require('grammy');
 const { getDb } = require('./db');
+const { 
+  recalculateUserKarma, 
+  FLOODER_EMOJIS, 
+  GURU_EMOJIS, 
+  SKEPTIC_EMOJIS, 
+  NEGATIVE_EMOJIS 
+} = require('./karma');
+
+const VALID_EMOJIS = [...FLOODER_EMOJIS, ...GURU_EMOJIS, ...SKEPTIC_EMOJIS, ...NEGATIVE_EMOJIS];
 
 let botInstance = null;
 
@@ -26,7 +35,7 @@ async function startBot(token, webAppUrl, targetChatId) {
     });
   });
 
-  // Track messages
+  // Track messages and replies
   bot.on('message', async (ctx) => {
     if (!ctx.from) return;
     const db = await getDb();
@@ -34,22 +43,46 @@ async function startBot(token, webAppUrl, targetChatId) {
     
     if (ctx.chat.type === 'supergroup' || ctx.chat.type === 'group') {
       if (targetChatId && String(ctx.chat.id) !== String(targetChatId)) return;
+      
       const res = await db.run(
-        'INSERT OR IGNORE INTO messages (message_id, chat_id, user_id) VALUES (?, ?, ?)',
-        [ctx.message.message_id, ctx.chat.id, ctx.from.id]
+        'INSERT OR IGNORE INTO messages (message_id, chat_id, user_id, date_unixtime) VALUES (?, ?, ?, ?)',
+        [ctx.message.message_id, ctx.chat.id, ctx.from.id, ctx.message.date]
       );
-      if (res.changes > 0) {
+      
+      let parentAuthorRecalc = null;
+      
+      // Handle replies (Every action has weight)
+      if (ctx.message.reply_to_message) {
+        const parentMsgId = ctx.message.reply_to_message.message_id;
+        const parentRow = await db.get(
+          'SELECT user_id FROM messages WHERE message_id = ? AND chat_id = ?',
+          [parentMsgId, ctx.chat.id]
+        );
+        if (parentRow && parentRow.user_id !== ctx.from.id) { // No self-replies
+          await db.run(
+            `INSERT OR IGNORE INTO replies (reply_message_id, reply_chat_id, parent_message_id, parent_chat_id, replier_id, author_id)
+             VALUES (?, ?, ?, ?, ?, ?)`,
+            [ctx.message.message_id, ctx.chat.id, parentMsgId, ctx.chat.id, ctx.from.id, parentRow.user_id]
+          );
+          parentAuthorRecalc = parentRow.user_id;
+        }
+      }
+
+      // Recalculate sender's karma (total messages count changed, affecting Quality Index Q)
+      await recalculateUserKarma(db, ctx.from.id);
+      
+      // Recalculate parent author's karma (received reply)
+      if (parentAuthorRecalc) {
+        await recalculateUserKarma(db, parentAuthorRecalc);
+      }
+      
+      if (res.changes > 0 || parentAuthorRecalc) {
         await updateLastUpdateTime(db);
       }
     }
   });
 
   // Handle reactions
-  const FLOODER_EMOJIS = ['😁', '🤣', '🤪'];
-  const GURU_EMOJIS = ['🔥', '👍', '💯', '🤝', '🫡', '❤️', '❤', '❤️🔥', '👌', '😎'];
-  const SKEPTIC_EMOJIS = ['🤔', '👀', '🤷‍♂️', '🤷\u200d♂️', '🤷', '🤯', '😱', '👎', '😢', '🙈', '🥴'];
-  const VALID_EMOJIS = [...FLOODER_EMOJIS, ...GURU_EMOJIS, ...SKEPTIC_EMOJIS];
-
   bot.on('message_reaction', async (ctx) => {
     const reaction = ctx.messageReaction;
     const db = await getDb();
@@ -79,31 +112,29 @@ async function startBot(token, webAppUrl, targetChatId) {
     const added = newEmojis.filter(e => !oldEmojis.includes(e) && VALID_EMOJIS.includes(e));
     const removed = oldEmojis.filter(e => !newEmojis.includes(e) && VALID_EMOJIS.includes(e));
     
-    let karmaDelta = added.length - removed.length;
-    
-    const flooderAdded = added.filter(e => FLOODER_EMOJIS.includes(e)).length;
-    const flooderRemoved = removed.filter(e => FLOODER_EMOJIS.includes(e)).length;
-    const flooderDelta = flooderAdded - flooderRemoved;
+    let dbUpdated = false;
 
-    const guruAdded = added.filter(e => GURU_EMOJIS.includes(e)).length;
-    const guruRemoved = removed.filter(e => GURU_EMOJIS.includes(e)).length;
-    const guruDelta = guruAdded - guruRemoved;
-
-    const skepticAdded = added.filter(e => SKEPTIC_EMOJIS.includes(e)).length;
-    const skepticRemoved = removed.filter(e => SKEPTIC_EMOJIS.includes(e)).length;
-    const skepticDelta = skepticAdded - skepticRemoved;
-    
-    if (karmaDelta !== 0 || flooderDelta !== 0 || guruDelta !== 0 || skepticDelta !== 0) {
-      // Update user karma and categories
-      await db.run(
-        `UPDATE users SET 
-          karma = MAX(0, karma + ?),
-          karma_flooder = MAX(0, karma_flooder + ?),
-          karma_guru = MAX(0, karma_guru + ?),
-          karma_skeptic = MAX(0, karma_skeptic + ?)
-         WHERE id = ?`,
-        [karmaDelta, flooderDelta, guruDelta, skepticDelta, authorId]
+    // Process removals
+    for (const emoji of removed) {
+      const res = await db.run(
+        'DELETE FROM reactions WHERE message_id = ? AND chat_id = ? AND reactor_id = ? AND emoji = ?',
+        [reaction.message_id, reaction.chat.id, reactor.id, emoji]
       );
+      if (res.changes > 0) dbUpdated = true;
+    }
+    
+    // Process additions
+    for (const emoji of added) {
+      const res = await db.run(
+        'INSERT OR IGNORE INTO reactions (message_id, chat_id, reactor_id, author_id, emoji) VALUES (?, ?, ?, ?, ?)',
+        [reaction.message_id, reaction.chat.id, reactor.id, authorId, emoji]
+      );
+      if (res.changes > 0) dbUpdated = true;
+    }
+    
+    if (dbUpdated) {
+      // Recalculate target user's karma
+      await recalculateUserKarma(db, authorId);
       await updateLastUpdateTime(db);
     }
   });
