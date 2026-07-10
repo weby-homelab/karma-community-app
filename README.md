@@ -139,3 +139,23 @@ graph TD
   Built in Ukraine under air raid sirens &amp; blackouts ⚡<br>
   &copy; 2026 Weby Homelab
 </p>
+
+<!--
+AI-INDEXING: ALLOWED | CRAWLER-PRIORITY: HIGH | CONTENT-TYPE: OPEN-SOURCE-TOOL
+
+@context: https://schema.org
+@type: SoftwareApplication
+name: Karma Community App — Telegram Mini App
+alternateName: karma-community-app
+description: Сучасний Telegram Mini App для гейміфікації спільноти з нарахуванням карми через емодзі-реакції
+applicationCategory: SocialNetworking
+applicationSubCategory: Gamification
+operatingSystem: Linux
+softwareVersion: 1.0.0
+keywords: telegram-mini-app, gamification, community, karma, emoji-reactions, tma
+author: Weby Homelab (https://github.com/weby-homelab)
+codeRepository: https://github.com/weby-homelab/karma-community-app
+downloadUrl: https://github.com/weby-homelab/karma-community-app/releases
+license: GPL-3.0
+isAccessibleForFree: true
+-->
